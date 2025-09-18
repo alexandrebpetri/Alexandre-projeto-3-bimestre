@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Jurassic Hub</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <header class="admin-header">
+    <div class="logo-container">
+      <img src="/./assets/JH-Logo.png" alt="Logo Jurassic Hub" class="admin-logo">
+      <h1>Jurassic Hub <span>Admin</span></h1>
+    </div>
+  </header>
+
+  <main class="admin-dashboard">
+    <div class="admin-card" onclick="location.href='games.html'">
+      <img src="/./assets/game-controller.png" alt="Gerenciar Jogos" class="admin-card-icon">
+      <h2>Gerenciar Jogos</h2>
+      <p>Adicione, edite ou remova jogos do catálogo</p>
+    </div>
+
+    <div class="admin-card" onclick="location.href='categories.html'">
+      <img src="/./assets/categories.png" alt="Gerenciar Categorias" class="admin-card-icon">
+      <h2>Gerenciar Categorias</h2>
+      <p>Administre as categorias de jogos</p>
+    </div>
+
+    <div class="admin-card" onclick="location.href='developers.html'">
+      <img src="/./assets/developer.png" alt="Gerenciar Desenvolvedores" class="admin-card-icon">
+      <h2>Gerenciar Desenvolvedores</h2>
+      <p>Administre os estúdios desenvolvedores</p>
+    </div>
+
+        <div class="admin-card" onclick="location.href='users.html'">
+      <img src="/./assets/user.png" alt="Voltar ao Site" class="admin-card-icon">
+      <h2>Gerenciar Usuários</h2>
+      <p>Altere os Status dos Usuários</p>
+        </div>
+
+    <div class="admin-card" onclick="location.href='/../frontend/index.html'">
+      <img src="/./assets/back-arrow.png" alt="Voltar ao Site" class="admin-card-icon">
+      <h2>Voltar ao Site</h2>
+      <p>Retorne à loja principal</p>
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerenciar Status de Usuários | Jurassic Hub</title>
+  <link rel="shortcut icon" href="/./assets/favicon.ico" type="image/x-icon">
+  <!-- Reaproveita o CSS do CRUD anterior para manter o mesmo visual -->
+  <link rel="stylesheet" href="categories.css">
+  <!-- caso queira, adicione ajustes mínimos -->
+  <link rel="stylesheet" href="users.css">
+</head>
+<body>
+  <header class="admin-header">
+    <button class="back-button" onclick="location.href='admin.html'">
+      <img src="/../assets/back-arrow.png" alt="Voltar" class="icon-medium">
+    </button>
+    <div class="admin-title">
+      <h1>Gerenciar Status de Usuários</h1>
+    </div>
+  </header>
+
+  <main class="admin-main-content">
+    <div class="admin-toolbar">
+      <div class="search-box">
+        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
+        <input type="text" id="user-search" placeholder="Buscar por email ou nickname">
+      </div>
+      <div style="flex:1"></div>
+    </div>
+
+    <div class="message-container" id="message-container"></div>
+
+    <!-- Modal de edição de status -->
+    <div class="modal" id="status-modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2 id="modal-title">Editar Status do Usuário</h2>
+        <form id="status-form">
+          <input type="hidden" id="user-id">
+          <div class="form-group">
+            <label>Usuário</label>
+            <div id="user-ident" style="font-weight:700; margin-bottom:8px; color:#fff;"></div>
+          </div>
+          <div class="form-group">
+            <label for="status-select">Status</label>
+            <select id="status-select" required style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #bdb76b; background:#181818; color:#fff;">
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="secondary-button" id="cancel-status-btn">Cancelar</button>
+            <button type="submit" class="primary-button" id="save-status-btn">Salvar Status</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de usuários -->
+    <div class="categories-grid" id="users-container"></div>
+  </main>
+
+  <script type="module" src="users.js"></script>
+</body>
+</html>

@@ -1,0 +1,670 @@
+/* ===== ESTILOS GERAIS ===== */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* ===== HEADER ===== */
+.admin-header {
+  background-color: #1a1a1a;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #6c6b34;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-container {
+  display: flex; /* Adicionado para alinhar logo e título */
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-logo {
+  width: 7rem;
+  height: 7rem;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #ffffff;
+}
+
+.admin-header h1 span {
+  color: #6c6b34;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ===== DASHBOARD ===== */
+.admin-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-card {
+  background-color: #2c2c2c;
+  border-radius: 12px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 220px;
+  border: 1px solid #3a3a3a;
+}
+
+.admin-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: #6c6b34;
+}
+
+.admin-card-icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1.5rem;
+  object-fit: contain;
+}
+
+.admin-card h2 {
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.admin-card p {
+  color: #aaaaaa;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* ===== PÁGINAS DE CRUD ===== */
+.admin-main-content {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-title {
+  flex-grow: 1; /* Permite que o título ocupe o espaço central */
+  text-align: center;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: #3a3a3a;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  flex-grow: 1;
+  max-width: 400px;
+  border: 1px solid #444;
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.8rem;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  outline: none;
+  font-size: 1rem;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.filter-controls select {
+  background-color: #3a3a3a;
+  color: white;
+  border: 1px solid #444;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  min-width: 180px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* ===== BOTÕES ===== */
+.primary-button {
+  background-color: #6c6b34;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.primary-button:hover {
+  background-color: #8a893e;
+  transform: translateY(-2px);
+}
+
+.secondary-button {
+  background-color: #3a3a3a;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.secondary-button:hover {
+  background-color: #4a4a4a;
+  transform: translateY(-2px);
+}
+
+.small-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.button-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-medium {
+  width: 24px;
+  height: 24px;
+}
+
+/* ===== LISTA DE ITENS (genérico para jogos, categorias, desenvolvedores) ===== */
+.data-grid { /* Novo estilo genérico para listas */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.8rem;
+}
+
+.data-card { /* Novo estilo genérico para cards */
+  background-color: #2c2c2c;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #3a3a3a;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Para empurrar ações para baixo */
+}
+
+.data-card:hover {
+  transform: scale(1.03);
+  border-color: #6c6b34;
+}
+
+.data-card-info {
+  padding: 1.2rem;
+  flex-grow: 1; /* Permite que o conteúdo cresça */
+}
+
+.data-card-info h3 {
+  color: white;
+  margin: 0 0 0.6rem 0;
+  font-size: 1.1rem;
+}
+
+.data-card-info p {
+  color: #aaaaaa;
+  font-size: 0.9rem;
+  margin: 0.4rem 0;
+}
+
+/* Estilos específicos para game-card (mantidos para compatibilidade) */
+.games-grid { /* Mantido para compatibilidade com admin-games.html */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.8rem;
+}
+
+.game-card { /* Mantido para compatibilidade com admin-games.html */
+  background-color: #2c2c2c;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #3a3a3a;
+}
+
+.game-card:hover {
+  transform: scale(1.03);
+  border-color: #6c6b34;
+}
+
+.game-card-image {
+  height: 180px;
+  background-color: #1e1e1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.game-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-card-image .no-image {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.game-card-info {
+  padding: 1.2rem;
+}
+
+.game-card-info h3 {
+  color: white;
+  margin: 0 0 0.6rem 0;
+  font-size: 1.1rem;
+}
+
+.game-price {
+  color: #6c6b34;
+  font-weight: bold;
+  margin: 0.4rem 0;
+  font-size: 1.1rem;
+}
+
+.game-developer {
+  color: #aaaaaa;
+  font-size: 0.9rem;
+  margin: 0.4rem 0;
+}
+
+.game-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.category-tag {
+  background-color: #3a3a3a;
+  color: #dddddd;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+/* Ações do Card (genérico) */
+.data-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.8rem;
+  gap: 0.8rem;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.data-card-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.data-card-actions .edit-btn {
+  background-color: #2196F3;
+}
+
+.data-card-actions .delete-btn {
+  background-color: #f44336;
+}
+
+.data-card-actions button:hover {
+  transform: scale(1.1);
+}
+
+.data-card-actions button img {
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== MODAL ===== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background-color: #2c2c2c;
+  margin: 5% auto;
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #6c6b34;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.close-modal {
+  color: #aaaaaa;
+  position: absolute;
+  right: 1.5rem;
+  top: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-modal:hover {
+  color: white;
+}
+
+#modal-title {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  font-size: 1.5rem;
+}
+
+/* ===== FORMULÁRIOS ===== */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.6rem;
+  color: white;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #3a3a3a;
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #6c6b34;
+  outline: none;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.categories-checkbox {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.checkbox-item input {
+  width: auto;
+}
+
+.checkbox-item label {
+  font-weight: normal;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.image-preview-container {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 220px;
+  display: none;
+  margin: 0 auto;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+#remove-image-btn {
+  margin-top: 0.8rem;
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+/* ===== MENSAGENS ===== */
+.message-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1100;
+  max-width: 350px;
+}
+
+.message {
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.message.success {
+  background-color: #4CAF50;
+}
+
+.message.error {
+  background-color: #f44336;
+}
+
+.message::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Adicione os ícones de sucesso e erro na pasta assets */
+.message.success::before {
+  background-image: url('../assets/success-icon.png');
+}
+
+.message.error::before {
+  background-image: url('../assets/error-icon.png');
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 1024px) {
+  .admin-dashboard {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.8rem;
+    padding: 2rem;
+  }
+  
+  .modal-content {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 1.2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .admin-dashboard {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .admin-card {
+    min-height: auto;
+    padding: 1.8rem;
+  }
+  
+  .admin-main-content {
+    padding: 1.5rem;
+  }
+  
+  .admin-toolbar {
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  
+  .search-box {
+    max-width: 100%;
+  }
+  
+  .filter-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .filter-controls select {
+    width: 100%;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 2% auto;
+    padding: 1.8rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .games-grid, .data-grid { /* Adicionado .data-grid */
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

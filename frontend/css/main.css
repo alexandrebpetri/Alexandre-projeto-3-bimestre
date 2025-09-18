@@ -1,0 +1,305 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #1e1e1e;
+  color: #fff;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8em;
+  background-color: #1e1e1e;
+  border-bottom: #6c6b34 solid 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.collumn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+input, select {
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  border: none;
+}
+
+#logo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: auto
+}
+
+#shopping-cart {
+  cursor: pointer;
+  margin: auto;
+}
+
+#shopping-cart img {
+  width: 70px;
+  height: 70px;
+  margin-right: 12px;
+  object-fit: cover;
+  border-color: #6c6b34 solid 2px;
+}
+
+#library {
+  cursor: pointer;
+  margin: auto;
+}
+
+#library img {
+  width: 70px;
+  height: 70px;
+  margin-right: 12px;
+  object-fit: cover;
+  border-color: #6c6b34 solid 2px;
+}
+
+#user img {
+  width: 100px;
+  height: 100px;
+  margin-right: 12px;
+  border-radius: 50%;
+  object-fit: cover;
+  border-color: #6c6b34 solid 2px;
+}
+
+#search {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border-bottom: 1px solid #555;
+  max-width: 300px;
+  margin-top: 30px;
+  margin: auto;
+  margin-right: 120px;
+}
+
+#search-img {
+  width: 27px;
+  height: 27px;
+  margin-right: 12px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: #ddd;
+  font-size: 1.1rem;
+}
+
+#search input::placeholder {
+  color: #aaa;
+}
+
+main {
+  padding-top: 9em; /* espaço suficiente para o header fixo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 9em);
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.game-card {
+  background-color: #2c2c2c;
+  border-radius: 10px;
+  padding: 15px;
+  width: 200px;
+  text-align: center;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: scale(1.05);
+}
+
+.game-card img {
+  width: 200px;
+  height: 275px;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #6c6b34;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #3e3d1a;
+}
+
+
+
+#gamesContainer {
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+#gamesContainer img{
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+#gamesContainer h1 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+#gamesContainer p {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+#gamePrice {
+  font-size: 24px;
+  color: #2e8b57;
+  font-weight: bold;
+}
+
+.center {
+  text-align: center;
+  padding: 50px;
+}
+
+.mensagem-flutuante {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  z-index: 1000;
+  box-shadow: 0 0 10px #000;
+}
+
+#adicionarCarrinho {
+  display: inline-block;
+  background-color: #2196F3;
+  color: white;
+  padding: 10px 15px;
+  margin: 10px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+#adicionarCarrinho:hover {
+  background-color: #1976D2;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.crud-tab form {
+  margin: 20px 0;
+}
+
+.crud-tab input {
+  display: block;
+  margin: 8px auto;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Card do usuário */
+#user-card-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#user-card {
+  background: #232323;
+  color: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  min-width: 320px;
+  position: relative;
+  box-shadow: 0 2px 16px #000a;
+  text-align: center;
+}
+#close-user-card {
+  position: absolute;
+  top: 12px; right: 18px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+#user-card-actions button,
+#delete-confirm-fields button,
+#delete-final-warning button {
+  margin: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #6c6b34;
+  color: #232323;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#user-card-actions button:hover,
+#delete-confirm-fields button:hover,
+#delete-final-warning button:hover {
+  background: #ffe082;
+}
+#delete-confirm-fields input {
+  display: block;
+  width: 90%;
+  margin: 0.5rem auto;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: none;
+  background: #292929;
+  color: #fff;
+}
+.auth-error {
+  color: #ff5252;
+  font-size: 0.95rem;
+  min-height: 1.2em;
+}

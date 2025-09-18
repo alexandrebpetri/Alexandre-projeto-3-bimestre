@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Categorias | Jurassic Hub</title>
+  <link rel="shortcut icon" href="/./assets/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="categories.css">
+</head>
+<body>
+  <header class="admin-header">
+    <button class="back-button" onclick="location.href='admin.html'">
+      <img src="/../assets/back-arrow.png" alt="Voltar" class="icon-medium">
+    </button>
+    <div class="admin-title">
+      <h1>Gerenciar Categorias</h1>
+    </div>
+    <button id="add-btn" class="primary-button add-button">
+      <img src="/../assets/add-icon.png" alt="Adicionar" class="button-icon">
+      Nova Categoria
+    </button>
+  </header>
+
+  <main class="admin-main-content">
+    <div class="admin-toolbar">
+      <div class="search-box">
+        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
+        <input type="text" id="category-search" placeholder="Buscar">
+      </div>
+    </div>
+
+    <div class="message-container" id="message-container"></div>
+
+    <!-- Modal de Edição/Criação -->
+    <div class="modal" id="category-modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2 id="modal-title">Adicionar Nova Categoria</h2>
+        <form id="category-form">
+          <input type="hidden" id="category-id">
+          <div class="form-group">
+            <label for="category-name">Nome da Categoria</label>
+            <input type="text" id="category-name" required>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="secondary-button" id="cancel-category-btn">Cancelar</button>
+            <button type="submit" class="primary-button">Salvar Categoria</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de Categorias -->
+    <div class="categories-grid" id="categories-container"></div>
+  </main>
+  <script type="module" src="categories.js"></script>
+</body>
+</html>

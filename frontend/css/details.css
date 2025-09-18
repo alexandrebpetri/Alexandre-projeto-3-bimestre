@@ -1,0 +1,313 @@
+body {
+  background: #181818;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+/* Cabeçalho */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8rem; /* 128px */
+  background-color: #1e1e1e;
+  border-bottom: 0.125rem solid #6c6b34; /* 2px */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.collumn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+input, select {
+  padding: 0.625rem; /* 10px */
+  margin: 0.625rem; /* 10px */
+  border-radius: 0.3125rem; /* 5px */
+  border: none;
+}
+
+#logo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* 12px */
+  margin: auto
+}
+
+#shopping-cart {
+  cursor: pointer;
+  margin: auto;
+}
+
+#shopping-cart img {
+  width: 4.375rem; /* 70px */
+  height: 4.375rem; /* 70px */
+  margin-right: 0.75rem; /* 12px */
+  object-fit: cover;
+  border-color: #6c6b34 solid 0.125rem; /* 2px */
+}
+
+#library {
+  cursor: pointer;
+  margin: auto;
+}
+
+#library img {
+  width: 4.375rem; /* 70px */
+  height: 4.375rem; /* 70px */
+  margin-right: 0.75rem; /* 12px */
+  object-fit: cover;
+  border-color: #6c6b34 solid 0.125rem; /* 2px */
+}
+
+#user img {
+  width: 6.25rem; /* 100px */
+  height: 6.25rem; /* 100px */
+  margin-right: 0.75rem; /* 12px */
+  border-radius: 50%;
+  object-fit: cover;
+  border-color: #6c6b34 solid 0.125rem; /* 2px */
+}
+
+#search {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border-bottom: 0.0625rem solid #555; /* 1px */
+  max-width: 18.75rem; /* 300px */
+  margin-top: 1.875rem; /* 30px */
+  margin: auto;
+  margin-right: 7.5rem; /* 120px */
+}
+
+#search-img {
+  width: 1.6875rem; /* 27px */
+  height: 1.6875rem; /* 27px */
+  margin-right: 0.75rem; /* 12px */
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: #ddd;
+  font-size: 1.1rem;
+}
+
+#search input::placeholder {
+  color: #aaa;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding-top: 8rem;
+  box-sizing: border-box;
+  height: calc(100vh - 8rem);
+  width: 100%;
+}
+
+#gamesContainer {
+  flex: 1;
+  display: flex;
+  align-items: stretch; /* Essencial para o card crescer */
+  justify-content: center;
+}
+
+.details-main {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center; /* centraliza verticalmente */
+  gap: 48px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 #000a;
+  padding: 48px 5vw;
+  width: 90vw;
+  max-width: 1600px;
+  box-sizing: border-box;
+}
+
+.details-image img {
+  width: 100%;
+  height: 40rem;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px #0008;
+  background: #222;
+}
+
+.details-info {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #fff;
+  max-width: 500px;
+}
+
+.details-info h1 {
+  font-size: 4rem;
+  margin-bottom: 8px;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.details-info p {
+  font-size: 1.08rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.descricao {
+  color: #e0e0e0;
+  font-size: 1.05rem;
+}
+
+.categoria, .developer, .release-date {
+  color: #b5e853;
+  font-weight: 500;
+}
+
+#gamePrice {
+  color: #4caf50;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+#addCart {
+  background: #b5e853;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 18px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px #0004;
+}
+#addCart:hover {
+  background: #fff;
+  color: #222;
+}
+
+@media (max-width: 900px) {
+  .details-main {
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 8px;
+    gap: 24px;
+  }
+  .details-info {
+    max-width: 100%;
+  }
+}
+
+.floating-message {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #b5e853;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  z-index: 9999;
+  box-shadow: 0 2px 12px #0008;
+  animation: fadeInOut 2s;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Card do usuário */
+#user-card-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#user-card {
+  background: #232323;
+  color: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  min-width: 320px;
+  position: relative;
+  box-shadow: 0 2px 16px #000a;
+  text-align: center;
+}
+#close-user-card {
+  position: absolute;
+  top: 12px; right: 18px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+#user-card-actions button,
+#delete-confirm-fields button,
+#delete-final-warning button {
+  margin: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #e6c34d;
+  color: #232323;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#user-card-actions button:hover,
+#delete-confirm-fields button:hover,
+#delete-final-warning button:hover {
+  background: #ffe082;
+}
+#delete-confirm-fields input {
+  display: block;
+  width: 90%;
+  margin: 0.5rem auto;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: none;
+  background: #292929;
+  color: #fff;
+}
+.auth-error {
+  color: #ff5252;
+  font-size: 0.95rem;
+  min-height: 1.2em;
+}

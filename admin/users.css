@@ -1,0 +1,6 @@
+/* users.css - ajustes mínimos para alinhar o conteúdo do CRUD de usuários */
+#users-container .developer-info {
+  font-size: 1.05rem;
+}
+#users-container .developer-info small { color:#bdb76b; }
+#status-modal .modal-content { max-width: 480px; }

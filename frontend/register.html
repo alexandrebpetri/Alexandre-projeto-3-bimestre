@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registrar - Jurassic Hub</title>
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="shortcut icon" href="../assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <main class="auth-container">
+    <h1>Registrar</h1>
+    <form id="register-form" class="auth-form">
+      <input type="email" id="email" placeholder="E-mail" required>
+      <input type="text" id="nickname" placeholder="Apelido" required>
+      <input type="password" id="password" placeholder="Senha" required>
+      <input type="password" id="confirm-password" placeholder="Confirmar senha" required>
+      <button type="submit">Registrar</button>
+      <div id="register-error" class="auth-error"></div>
+    </form>
+    <button class="auth-link" onclick="window.location.href='login.html'">Já possuo uma conta</button>
+  </main>
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>

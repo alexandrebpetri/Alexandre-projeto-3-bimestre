@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Jurassic Hub</title>
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="shortcut icon" href="../assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <main class="auth-container">
+    <h1>Login</h1>
+    <form id="login-form" class="auth-form">
+      <input type="text" id="user" placeholder="E-mail ou Apelido" required>
+      <input type="password" id="password" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+      <div id="login-error" class="auth-error"></div>
+    </form>
+    <button class="auth-link" onclick="window.location.href='register.html'">Não possuo conta</button>
+  </main>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
