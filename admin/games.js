@@ -58,26 +58,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadCategories() {
     const res = await fetch(`${API_BASE_URL}/categories`);
+    // atribui ao array global `categories` (não declarar const aqui)
     categories = await res.json();
-    categoriesContainer.innerHTML = '';
-    categoryFilter.innerHTML = '<option value="">Todas categorias</option>';
+
+    const container = document.getElementById('categories-container');
+    container.innerHTML = '';
+
+  // Preenche também o select de filtro de categorias
+  categoryFilter.innerHTML = '<option value="">Todas categorias</option>';
+
     categories.forEach(cat => {
-      // Para o filtro
+      // adiciona opção no filtro
       const opt = document.createElement('option');
       opt.value = cat.id;
       opt.textContent = cat.name;
       categoryFilter.appendChild(opt);
 
-      // Para o form
       const div = document.createElement('div');
-      div.className = 'checkbox-item';
+      div.classList.add('category-item');
       div.innerHTML = `
-        <input type="checkbox" id="cat-${cat.id}" value="${cat.id}">
+        <input type="checkbox" id="cat-${cat.id}" name="categories" value="${cat.id}">
         <label for="cat-${cat.id}">${cat.name}</label>
       `;
-      categoriesContainer.appendChild(div);
+      container.appendChild(div);
     });
-  }
+}
+
 
   // Carregar jogos
   async function loadGames() {
@@ -250,100 +256,74 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Formulário
-  async function handleFormSubmit(e) {
-    e.preventDefault();
-    const gameId = document.getElementById('game-id').value;
-    const name = document.getElementById('game-name').value;
-    const description = document.getElementById('game-description').value;
-    const price = document.getElementById('game-price').value;
-    const releaseDate = document.getElementById('game-release-date').value;
-    const developerId = developerSelect.value;
-    // Categorias
-    const selectedCategories = [];
-    document.querySelectorAll('#categories-container input[type="checkbox"]:checked').forEach(cb => {
-      const cat = categories.find(c => c.id == cb.value);
-      if (cat) selectedCategories.push(cat);
-    });
+async function handleFormSubmit(e) {
+  e.preventDefault();
 
-    // Validação de data (alerta para o usuário)
-    let releaseDateToSend = null;
-    if (releaseDate) {
-      if (!isNaN(Date.parse(releaseDate))) {
-        const year = new Date(releaseDate).getFullYear();
-        if (year >= 1900 && year <= 2100) {
-          releaseDateToSend = releaseDate;
-        } else {
-          showMessage('Ano da data de lançamento deve ser entre 1900 e 2100.', 'error');
-          return;
-        }
-      } else {
-        showMessage('Data de lançamento inválida.', 'error');
-        return;
-      }
-    }
+  try {
+    // Pega os valores do form
+    const name = document.querySelector('#game-name').value.trim();
+    const price = parseFloat(document.querySelector('#game-price').value);
+    const releaseDate = document.querySelector('#game-release-date').value;
+    const developerId = document.querySelector('#game-developer').value;
+    const description = document.querySelector('#game-description').value.trim();
 
-    // Validação e conversão do preço (aceita vírgula ou ponto)
-    let priceValue = price ? price.replace(',', '.') : '';
-    if (priceValue && isNaN(Number(priceValue))) {
-      showMessage('Preço inválido. Use apenas números, ponto ou vírgula.', 'error');
-      return;
-    }
 
-    if (!developerId) {
-      showMessage('Selecione um desenvolvedor.', 'error');
-      return;
-    }
-    if (selectedCategories.length === 0) {
-      showMessage('Selecione pelo menos uma categoria.', 'error');
-      return;
-    }
+    // Categorias selecionadas
+    const categories = Array.from(document.querySelectorAll('input[name="categories"]:checked'))
+      .map(c => c.value);
 
-    // O backend NÃO exige id no POST, apenas no PUT!
-    const gameData = {
+    // Monta objeto para salvar jogo
+    const newGame = {
       name,
+      price,
+      release_date: releaseDate,
+      developer_id: developerId,
       description,
-      price: priceValue ? parseFloat(priceValue) : 0,
-      release_date: releaseDateToSend,
-      developer_id: developerId ? parseInt(developerId) : null,
-      categories: selectedCategories.map(cat => cat.id)
+      categories
     };
 
-    try {
-      let response;
-      let method = 'POST';
-      let url = `${API_BASE_URL}/games`;
-      if (gameId) {
-        method = 'PUT';
-        url = `${API_BASE_URL}/games/${gameId}`;
-        gameData.id = parseInt(gameId); // Só envie id no PUT
-      }
-      response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(gameData)
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ao ${gameId ? 'atualizar' : 'adicionar'} jogo`);
-      }
-      // Pega o id do jogo salvo/criado
-      let savedGameId = gameId;
-      if (!gameId) {
-        const savedGame = await response.json();
-        savedGameId = savedGame.id;
-      }
-      // Faz upload da imagem se houver
-      if (currentImageBase64) {
-        await uploadImage(savedGameId, currentImageBase64);
-      }
-      showMessage(`Jogo ${gameId ? 'atualizado' : 'adicionado'} com sucesso!`, 'success');
-      await loadGames();
-      hideModal();
-    } catch (error) {
-      showMessage(`Erro ao salvar jogo: ${error.message}`, 'error');
-      console.error(error);
+    // 1) Envia os dados do jogo (sem imagem ainda)
+let url = `${API_BASE_URL}/games`;
+let method = 'POST';
+
+if (editingGameId) {
+  url = `${API_BASE_URL}/games/${editingGameId}`;
+  method = 'PUT';
+}
+
+const res = await fetch(url, {
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(newGame)
+});
+
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Erro ao salvar jogo: ${errText}`);
     }
+
+    const savedGame = await res.json();
+    const gameId = savedGame.id; // agora vai vir certo
+
+
+    // 2) Se tiver imagem, faz upload separado
+    if (currentImageBase64) {
+      try {
+        await uploadImage(gameId, currentImageBase64); // usa a função que te passei antes
+        console.log('Imagem enviada com sucesso!');
+      } catch (err) {
+        console.error('Erro ao enviar imagem:', err);
+      }
+    }
+
+    alert('Jogo salvo com sucesso!');
+    location.reload(); // recarrega a lista de jogos
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao salvar jogo. Veja o console.');
   }
+}
 
   // Imagem base64
   function handleImageUpload(e) {

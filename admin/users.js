@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Carrega status disponíveis
 async function loadStatuses() {
   try {
-    const res = await fetch(`${API_BASE_URL}/user-status`); // CORRETO: /user-status
+    const res = await fetch(`${API_BASE_URL}/users/status`);
     statuses = await res.json();
     populateStatusSelect();
   } catch (err) {
