@@ -1,4 +1,5 @@
 import { seeGame } from "./main.js";
+import { initUserCard } from './userCard.js';
 
 function loadCart() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -55,13 +56,22 @@ function loadCart() {
 }
 
 
-function paymentAddress(e) {
-    if (!isUserLoggedIn()) {
-        if (e) e.preventDefault();
-        showLoginPopup();
-        return false;
+async function paymentAddress(e) {
+  try {
+    const logged = await isUserLoggedIn();
+    if (!logged) {
+      if (e) e.preventDefault();
+      showLoginPopup();
+      return false;
     }
     window.location.href = "payment.html";
+  } catch (err) {
+    // Se ocorrer erro na verificação (rede/CORS/servidor), mostramos o popup
+    if (e) e.preventDefault();
+    console.error('Erro ao checar autenticação:', err);
+    showLoginPopup();
+    return false;
+  }
 }
 
 function removerItem(index) {
@@ -72,45 +82,8 @@ function removerItem(index) {
 }
 
 // Função para abrir o card ao clicar na foto do usuário
-document.getElementById('user').onclick = async function() {
-  const overlay = document.getElementById('user-card-overlay');
-  overlay.style.display = 'flex';
-
-  // Busca dados do usuário logado
-  const res = await fetch('http://127.0.0.1:3000/auth/me', { credentials: 'include' });
-  if (res.ok) {
-    const user = await res.json();
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-nick').textContent = user.nickname;
-  }
-  // Reset campos
-  document.getElementById('delete-confirm-fields').style.display = 'none';
-  document.getElementById('delete-final-warning').style.display = 'none';
-  document.getElementById('user-card-actions').style.display = 'block';
-  document.getElementById('delete-password-error').textContent = '';
-};
-
-// Fechar o card
-document.getElementById('close-user-card').onclick = function() {
-  document.getElementById('user-card-overlay').style.display = 'none';
-};
-
-// Logout
-document.getElementById('logout-btn').onclick = async function() {
-  await fetch('http://127.0.0.1:3000/auth/logout', { method: 'POST', credentials: 'include' });
-  alert('Adeus! E até logo. ;)');
-  window.location.href = 'index.html';
-};
-
-// Mostrar campos para exclusão de conta
-document.getElementById('delete-account-btn').onclick = function() {
-  document.getElementById('user-card-actions').style.display = 'none';
-  document.getElementById('delete-confirm-fields').style.display = 'block';
-  document.getElementById('delete-final-warning').style.display = 'none';
-  document.getElementById('delete-password').value = '';
-  document.getElementById('delete-password-confirm').value = '';
-  document.getElementById('delete-password-error').textContent = '';
-};
+// Inicializa o user card compartilhado
+initUserCard();
 
 // Checar senha antes de mostrar aviso final
 document.getElementById('delete-check-btn').onclick = async function() {
@@ -150,23 +123,28 @@ document.getElementById('delete-final-yes').onclick = async function() {
     credentials: 'include'
   });
   alert('Conta excluída com sucesso!');
-  window.location.href = 'index.html';
+  window.location.href = '/index.html';
 };
 
 // Botão "Não" para cancelar exclusão
 document.getElementById('delete-final-no').onclick = function() {
-  window.location.href = 'index.html';
+  window.location.href = '/index.html';
 };
 
 // Função para verificar se o usuário está logado (exemplo usando localStorage)
 async function isUserLoggedIn() {
-  const res = await fetch('http://127.0.0.1:3000/auth/me', {
-    method: 'GET',
-    credentials: 'include'
-  });
-  if (!res.ok) return false;
-  const user = await res.json();
-  return user && user.authenticated;
+  try {
+    const res = await fetch('http://127.0.0.1:3000/auth/me', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    if (!res.ok) return false;
+    const user = await res.json();
+    return user && user.authenticated;
+  } catch (err) {
+    console.error('isUserLoggedIn fetch error:', err);
+    return false;
+  }
 }
 
 function showLoginPopup() {
@@ -214,18 +192,7 @@ function showLoginPopup() {
     };
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const finalizarBtn = document.getElementById('end-btn');
-    if (finalizarBtn) {
-        finalizarBtn.addEventListener('click', function(e) {
-            if (!isUserLoggedIn()) {
-                e.preventDefault();
-                showLoginPopup();
-                return false;
-            }
-            // Se estiver logado, segue o fluxo normal
-        });
-    }
-});
+// Nota: o botão 'end-btn' é atribuído dinamicamente em loadCart()
+// e já recebe a função paymentAddress (assíncrona) como handler.
 
 window.addEventListener('DOMContentLoaded', loadCart);

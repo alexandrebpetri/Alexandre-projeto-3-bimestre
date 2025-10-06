@@ -41,4 +41,20 @@ async function updateUserStatus(req, res) {
   }
 }
 
-module.exports = { listUsers, listUserStatus, updateUserStatus };
+// Deletar a própria conta (usuário autenticado)
+async function deleteOwnAccount(req, res) {
+  const userId = req.userId;
+  try {
+    if (!userId) return res.status(401).json({ error: 'Usuário não autenticado.' });
+    if (userId === 1) return res.status(403).json({ error: 'O Admin_Supremo não pode ser excluído.' });
+
+    await pool.query('DELETE FROM users WHERE id=$1', [userId]);
+    // limpa cookie de sessão
+    res.clearCookie('token');
+    return res.status(204).send();
+  } catch (err) {
+    handleError(res, err, 'deletar própria conta');
+  }
+}
+
+module.exports = { listUsers, listUserStatus, updateUserStatus, deleteOwnAccount };

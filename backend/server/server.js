@@ -47,6 +47,6 @@ app.use('/api/library', libraryRoutes);
 app.use('/images', imageRoutes); // aqui sim ✅
 
 // ================== START SERVER ==================
-//app.listen(port, '127.0.0.1', () => {
-//  console.log(`Servidor rodando em http://127.0.0.1:${port}`);
-//});
+app.listen(port, '127.0.0.1', () => {
+  console.log(`Servidor rodando em http://127.0.0.1:${port}`);
+});

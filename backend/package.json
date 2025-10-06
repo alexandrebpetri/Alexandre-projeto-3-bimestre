@@ -4,7 +4,7 @@
   "main": "server/server.js",
   "scripts": {
 "main": "server.js",
-  "start": "node server.js",
+  "start": "node server/server.js",
   "dev": "nodemon server.js",
   "fix-sequences": "node scripts/fix_sequences.js"
   },

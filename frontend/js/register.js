@@ -19,7 +19,7 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
   });
   const data = await res.json();
   if (res.ok) {
-    window.location.href = 'index.html';
+    window.location.href = '/../index.html';
   } else {
     errorDiv.textContent = data.erro || data.error || 'Erro ao registrar.';
   }

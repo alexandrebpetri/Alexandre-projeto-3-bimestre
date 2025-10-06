@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jurassic Hub</title>
+  <link rel="stylesheet" href="frontend/css/main.css" />
+  <link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<header>
+
+  <div class="collumn">
+
+    <div onclick= 'alert("Em breve")' id="library">
+    <img src="assets/library.png" alt="icone da biblioteca">
+  </div>
+
+  <div onclick="window.location.href = '/frontend/Cart.html';" id="shopping-cart">
+    <img src="assets/cart.png" alt="icone de um carrinho de compras">
+  </div>
+
+  </div>
+
+  <div class="collumn">
+
+  <div onclick="window.location.href = 'index.html';" id="logo">
+    <img src="assets/JH-Logo.png" id="logo-img" alt="Logo do Jurassic Hub" width="100" height="100">
+    <h1>Jurassic Hub</h1>
+  </div>
+
+  </div>
+
+  <div class="collumn">
+
+  <div id="search">
+    <img src="assets/search-icon.png" alt="icone de pesquisa" id="search-img">
+    <input type="search" name="search-game" id="search-game" placeholder="pesquisar" oninput="searchGames(this.value)">
+  </div>
+
+  <div id="user">
+    <img src="assets/user-icon.png" alt="icone de usuario" width="50" height="50">
+  </div>
+
+</div>
+
+</header>
+
+  <main>
+    <div id="lista-jogos" class="grid"></div>
+  </main>
+
+  <!-- Card do usuário (inicialmente oculto) -->
+<div id="user-card-overlay" style="display:none;">
+  <div id="user-card">
+    <span id="close-user-card" title="Fechar">&times;</span>
+    <h2 id="card-title">Perfil</h2>
+    <div id="user-info">
+      <p><strong>Email:</strong> <span id="user-email"></span></p>
+      <p><strong>Apelido:</strong> <span id="user-nick"></span></p>
+    </div>
+    <div id="user-card-actions">
+      <button id="logout-btn">Sair</button>
+      <button id="delete-account-btn">Excluir conta</button>
+    </div>
+    <div id="manage-btn-container"></div>
+    <div id="delete-confirm-fields" style="display:none;">
+      <input type="password" id="delete-password" placeholder="Digite sua senha">
+      <input type="password" id="delete-password-confirm" placeholder="Confirme sua senha">
+      <button id="delete-check-btn">Confirmar senha</button>
+      <div id="delete-password-error" class="auth-error"></div>
+    </div>
+    <div id="delete-final-warning" style="display:none;">
+      <p>
+        Tem certeza que deseja excluir a sua conta do Jurassic Hub?<br>
+        <strong>Toda a sua biblioteca será excluída e NÃO SERÁ RECUPERÁVEL!</strong><br>
+        E eu também vou ficar triste. :(
+      </p>
+      <button id="delete-final-yes">Sim</button>
+      <button id="delete-final-no">Não</button>
+    </div>
+  </div>
+</div>
+
+  <script type="module" src="frontend/js/main.js"></script>
+</body>
+</html>

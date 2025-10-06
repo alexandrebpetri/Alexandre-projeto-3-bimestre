@@ -20,7 +20,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
   if (res.ok) {
     localStorage.setItem('userId', data.user.id); // Armazena o ID do usuário no localStorage
-    window.location.href = 'index.html';
+    window.location.href = '/../index.html';
   } else {
     errorDiv.textContent = data.erro || data.error || 'Erro ao fazer login.';
   }

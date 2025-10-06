@@ -92,4 +92,21 @@ async function me(req, res) {
   }
 }
 
-module.exports = { register, login, logout, me };
+async function checkPassword(req, res) {
+  try {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'Senha não informada' });
+
+    const result = await pool.query('SELECT password FROM users WHERE id=$1', [req.userId]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(401).json({ valid: false });
+    return res.json({ valid: true });
+  } catch (err) {
+    handleError(res, err, 'verificar senha');
+  }
+}
+
+module.exports = { register, login, logout, me, checkPassword };

@@ -1,4 +1,5 @@
 import { loadGamesFromAPI, games } from "../controller/controller.js";
+import { initUserCard } from './userCard.js';
 
 function formatCategories(categories) {
   if (!categories || categories.length === 0) return 'Nenhuma';
@@ -74,36 +75,8 @@ function showMessage(text) {
 }
 
 // Função para abrir o card ao clicar na foto do usuário
-document.getElementById('user').onclick = async function() {
-  const overlay = document.getElementById('user-card-overlay');
-  overlay.style.display = 'flex';
-
-  // Busca dados do usuário logado
-  const res = await fetch('http://127.0.0.1:3000/auth/me', { credentials: 'include' });
-  if (res.ok) {
-    const user = await res.json();
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-nick').textContent = user.nickname;
-  }
-  // Reset campos
-  document.getElementById('delete-confirm-fields').style.display = 'none';
-  document.getElementById('delete-final-warning').style.display = 'none';
-  document.getElementById('user-card-actions').style.display = 'block';
-  document.getElementById('delete-password-error').textContent = '';
-};
-
-// Fechar o card
-document.getElementById('close-user-card').onclick = function() {
-  document.getElementById('user-card-overlay').style.display = 'none';
-};
-
-// Logout
-document.getElementById('logout-btn').onclick = async function() {
-  await fetch('http://127.0.0.1:3000/auth/logout', { method: 'POST', credentials: 'include' });
-  localStorage.clear(); // Limpa tudo!
-  alert('Adeus! E até logo. ;)');
-  window.location.href = 'index.html';
-};
+// Inicializa o user card compartilhado
+initUserCard();
 
 // Mostrar campos para exclusão de conta
 document.getElementById('delete-account-btn').onclick = function() {
@@ -153,12 +126,12 @@ document.getElementById('delete-final-yes').onclick = async function() {
     credentials: 'include'
   });
   alert('Conta excluída com sucesso!');
-  window.location.href = 'index.html';
+  window.location.href = '/../index.html';
 };
 
 // Botão "Não" para cancelar exclusão
 document.getElementById('delete-final-no').onclick = function() {
-  window.location.href = 'index.html';
+  window.location.href = '/../index.html';
 };
 
 loadDetails();

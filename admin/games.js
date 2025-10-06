@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let developers = [];
   let categories = [];
   let currentImageBase64 = null;
+  let currentImageId = null;
   let editingGameId = null;
 
   // Inicialização
@@ -188,6 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const game = games.find(g => g.id === gameId);
       if (game) {
         editingGameId = game.id;
+        currentImageId = game.image_id || null;
         document.getElementById('game-id').value = game.id;
         document.getElementById('game-name').value = game.name;
         document.getElementById('game-description').value = game.description || '';
@@ -218,6 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else {
       modalTitle.textContent = 'Adicionar Novo Jogo';
+      currentImageId = null;
     }
     modal.style.display = 'block';
   }
@@ -248,8 +251,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formData = new FormData();
     formData.append('image', blob, 'upload.jpg');
 
-    // Faz upload
-    await fetch(`${API_BASE_URL}/upload/${gameId}`, {
+    // Faz upload (endpoint montado em /images)
+    await fetch(`${API_BASE_URL}/images/upload/${gameId}`, {
       method: 'POST',
       body: formData
     });
@@ -342,7 +345,24 @@ const res = await fetch(url, {
     reader.readAsDataURL(file);
   }
 
-  function removeImage() {
+  async function removeImage() {
+    // Se a imagem j e1 existe no servidor, apaga-a tamb e9m no backend
+    try {
+      if (editingGameId && currentImageId) {
+        await fetch(`${API_BASE_URL}/images/${currentImageId}`, { method: 'DELETE' });
+        // atualiza games localmente: remove referencia image_id do jogo atual
+        const g = games.find(x => x.id === editingGameId);
+        if (g) {
+          g.image_id = null;
+          g.image = null;
+        }
+        currentImageId = null;
+      }
+    } catch (err) {
+      console.error('Erro ao remover imagem do servidor:', err);
+    }
+
+    // Limpa preview localmente
     imagePreview.src = '';
     imagePreview.style.display = 'none';
     removeImageBtn.style.display = 'none';

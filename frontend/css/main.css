@@ -67,6 +67,11 @@ input, select {
   border-color: #6c6b34 solid 2px;
 }
 
+#user {
+  cursor: pointer;
+  margin: auto;
+}
+
 #user img {
   width: 100px;
   height: 100px;
@@ -273,20 +278,37 @@ button:hover {
 #user-card-actions button,
 #delete-confirm-fields button,
 #delete-final-warning button {
+  display: inline-block;
   margin: 0.5rem 0.5rem 0 0.5rem;
-  padding: 0.7rem 1.2rem;
+  padding: 0.65rem 1.2rem;
   border: none;
   border-radius: 6px;
-  background: #6c6b34;
-  color: #232323;
-  font-weight: bold;
+  background: #e6c34d; /* primary gold */
+  color: #222; /* dark text for contrast */
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s, transform 0.08s, box-shadow 0.12s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  min-width: 120px;
+  text-align: center;
 }
 #user-card-actions button:hover,
 #delete-confirm-fields button:hover,
 #delete-final-warning button:hover {
-  background: #ffe082;
+  background: #d4b84a;
+  transform: translateY(-1px);
+}
+#user-card-actions button:active,
+#delete-confirm-fields button:active,
+#delete-final-warning button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+#user-card-actions button:focus,
+#delete-confirm-fields button:focus,
+#delete-final-warning button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(230,195,77,0.18);
 }
 #delete-confirm-fields input {
   display: block;
@@ -303,3 +325,33 @@ button:hover {
   font-size: 0.95rem;
   min-height: 1.2em;
 }
+
+/* Estilo para os botões de Login / Criar conta quando nenhum usuário está logado */
+#user-card #no-user-div button {
+  display: inline-block;
+  margin: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  background: #6c6b34;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+#user-card #no-user-div button:hover { background: #5a5829; }
+
+/* Botão de gerenciamento para admins dentro do user-card */
+#manage-btn-container #manage-admin-btn {
+  display: inline-block;
+  margin: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  background: #2e7d32; /* verde admin */
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+#manage-btn-container #manage-admin-btn:hover { background: #256029; transform: translateY(-1px); }
+#manage-btn-container #manage-admin-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(46,125,50,0.18); }

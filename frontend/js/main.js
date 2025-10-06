@@ -27,7 +27,7 @@ function searchGames(text) {
 }
 
 export function seeGame(id) {
-  window.location.href = `details.html?id=${id}`;
+  window.location.href = `frontend/details.html?id=${id}`;
 }
 
 window.seeGame = seeGame;
@@ -113,8 +113,8 @@ function showNoUserLogged() {
   `;
   userCard.appendChild(noUserDiv);
 
-  document.getElementById('login-btn').onclick = () => window.location.href = 'login.html';
-  document.getElementById('signin-btn').onclick = () => window.location.href = 'register.html';
+  document.getElementById('login-btn').onclick = () => window.location.href = 'frontend/login.html';
+  document.getElementById('signin-btn').onclick = () => window.location.href = 'frontend/register.html';
 }
 
 // Fechar o card
@@ -124,10 +124,14 @@ document.getElementById('close-user-card').onclick = function() {
 
 // Logout (corrigido para GET)
 document.getElementById('logout-btn').onclick = async function() {
-  await fetch('http://127.0.0.1:3000/auth/logout', { method: 'GET', credentials: 'include' });
+  try {
+    await fetch('http://127.0.0.1:3000/auth/logout', { method: 'GET', credentials: 'include' });
+  } catch (err) {
+    console.error('Erro no logout:', err);
+  }
   localStorage.clear();
   alert('Adeus! E até logo. ;)');
-  window.location.href = 'index.html';
+  window.location.href = '/../index.html';
 };
 
 // Mostrar campos para exclusão de conta
@@ -178,10 +182,10 @@ document.getElementById('delete-final-yes').onclick = async function() {
     credentials: 'include'
   });
   alert('Conta excluída com sucesso!');
-  window.location.href = 'index.html';
+  window.location.href = '/../index.html';
 };
 
 // Botão "Não" para cancelar exclusão
 document.getElementById('delete-final-no').onclick = function() {
-  window.location.href = 'index.html';
+  window.location.href = '/../index.html';
 };
