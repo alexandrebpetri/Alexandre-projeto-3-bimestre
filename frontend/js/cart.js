@@ -1,17 +1,32 @@
 import { seeGame } from "./main.js";
 import { initUserCard } from './userCard.js';
+import { getUserLibraryIds } from './libraryAPI.js';
 
-function loadCart() {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const container = document.getElementById('cart-container');
-    container.innerHTML = '';
+async function loadCart() {
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const container = document.getElementById('cart-container');
+  container.innerHTML = '';
 
-    let total = 0;
-
-    if (cart.length === 0) {
-        container.innerHTML = `<p class="empty">Seu carrinho está vazio.</p>`;
-        return;
+  // Remove do carrinho jogos que o usuário já possui na biblioteca
+  try {
+    const owned = await getUserLibraryIds();
+    if (owned && owned.size > 0 && cart.length > 0) {
+      const originalLen = cart.length;
+      cart = cart.filter(item => !owned.has(item.id));
+      if (cart.length !== originalLen) {
+        localStorage.setItem('cart', JSON.stringify(cart));
+      }
     }
+  } catch (err) {
+    console.error('Erro ao verificar biblioteca do usuário para filtrar o carrinho:', err);
+  }
+
+  let total = 0;
+
+  if (cart.length === 0) {
+    container.innerHTML = `<p class="empty">Seu carrinho está vazio.</p>`;
+    return;
+  }
 
     cart.forEach((game, index) => {
         const card = document.createElement('div');
@@ -37,7 +52,7 @@ function loadCart() {
 
     summary.innerHTML = `
         <h3>Total: R$ ${total.toFixed(2)}</h3>
-        <button id="end-btn">Finalizar Pedido</button>
+    <button id="end-btn">Finalizar Pedido</button>
     `;
 
     container.appendChild(summary);
@@ -49,8 +64,64 @@ function loadCart() {
         });
     });
 
-    // Adicione o evento aqui, pois o botão é criado dinamicamente
-    document.getElementById("end-btn").onclick = paymentAddress;
+  // Adicione o evento aqui, pois o botão é criado dinamicamente
+  const endBtn = document.getElementById("end-btn");
+  if (endBtn) {
+    // Se o total for zero e existir pelo menos um item, o botão vira 'Adicionar à Biblioteca'
+    if (total === 0 && cart.length > 0) {
+      endBtn.textContent = 'Adicionar à Biblioteca';
+      endBtn.onclick = async (e) => {
+        e.preventDefault();
+        // verifica se está logado
+        const logged = await isUserLoggedIn();
+        if (!logged) { showLoginPopup(); return; }
+        // obtém userId via /auth/me
+        let userId = null;
+        try {
+          const r = await fetch('http://127.0.0.1:3000/auth/me', { method: 'GET', credentials: 'include' });
+          if (r.ok) { const u = await r.json(); if (u && u.authenticated) userId = u.id; }
+        } catch (err) { console.error('Erro ao obter usuário:', err); }
+        if (!userId) userId = localStorage.getItem('userId');
+        if (!userId) { showLoginPopup(); return; }
+
+        // adiciona cada jogo na biblioteca
+        const successes = [];
+        const failures = [];
+        for (const item of cart) {
+          const gid = item && (item.id || item.gameId) ? (item.id || item.gameId) : null;
+          if (!gid) continue;
+          try {
+            const res = await fetch('http://127.0.0.1:3000/api/library', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ userId, gameId: gid })
+            });
+            if (res.ok || res.status === 201 || res.status === 409) {
+              // 201 criado, 409 já existe — consideramos como sucesso para o usuário
+              successes.push(gid);
+            } else {
+              failures.push({ gid, status: res.status });
+            }
+          } catch (err) {
+            console.error('Erro ao adicionar na biblioteca:', err);
+            failures.push({ gid, error: err.message });
+          }
+        }
+
+        // Limpa carrinho e atualiza UI
+        localStorage.removeItem('cart');
+        localStorage.removeItem('totalCompra');
+        if (successes.length > 0) alert('Itens adicionados à sua biblioteca!');
+        else alert('Nenhum item foi adicionado. Verifique o console para mais detalhes.');
+        loadCart();
+        // opcional: redireciona para a biblioteca
+        window.location.href = 'library.html';
+      };
+    } else {
+      endBtn.onclick = paymentAddress;
+    }
+  }
     localStorage.setItem("totalCompra", total); // valorTotal = número
 
 }
