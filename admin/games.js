@@ -24,36 +24,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentImageBase64 = null;
   let currentImageId = null;
   let editingGameId = null;
+  let searchedId = null;
 
   // Inicialização
   await loadDevelopers();
   await loadCategories();
   await loadGames();
 
-  // Event Listeners
-  addGameBtn.addEventListener('click', () => showGameForm());
-  closeModal.addEventListener('click', () => hideModal());
+  // Event Listeners (aplica apenas se os elementos existem)
+  addGameBtn && addGameBtn.addEventListener('click', () => showGameForm());
+  closeModal && closeModal.addEventListener('click', () => hideModal());
   cancelBtn && cancelBtn.addEventListener('click', () => hideModal());
-  gameForm.addEventListener('submit', handleFormSubmit);
+  gameForm && gameForm.addEventListener('submit', handleFormSubmit);
   gameImageInput && gameImageInput.addEventListener('change', handleImageUpload);
   removeImageBtn && removeImageBtn.addEventListener('click', removeImage);
-  gameSearchInput.addEventListener('input', filterGames);
-  categoryFilter.addEventListener('change', filterGames);
-  developerFilter.addEventListener('change', filterGames);
+  gameSearchInput && gameSearchInput.addEventListener('input', filterGames);
+  categoryFilter && categoryFilter.addEventListener('change', filterGames);
+  developerFilter && developerFilter.addEventListener('change', filterGames);
+  const btnSearchId = document.getElementById('btn-search-id');
+  const searchIdInput = document.getElementById('search-id');
+  if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
+  // Botão de exclusão dentro do modal
+  const deleteGameBtn = document.getElementById('delete-game-btn');
+  if (deleteGameBtn) {
+    deleteGameBtn.addEventListener('click', async () => {
+      const id = document.getElementById('game-id').value;
+      if (!id) return showMessage('ID inválido para exclusão', 'error');
+      if (!confirm('Tem certeza que deseja excluir este jogo?')) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/games/${id}`, { method: 'DELETE' });
+        if (!res.ok) { const txt = await res.text(); throw new Error(txt || 'Erro ao excluir'); }
+        showMessage('Jogo excluído com sucesso!', 'success');
+        hideModal();
+        await loadGames();
+      } catch (err) {
+        console.error(err);
+        showMessage('Erro ao excluir jogo.', 'error');
+      }
+    });
+  }
 
   // Carregar desenvolvedores e categorias
   async function loadDevelopers() {
     const res = await fetch(`${API_BASE_URL}/developers`);
     developers = await res.json();
-    developerSelect.innerHTML = '<option value="">Selecione...</option>';
-    developerFilter.innerHTML = '<option value="">Todos desenvolvedores</option>';
+    if (developerSelect) developerSelect.innerHTML = '<option value="">Selecione...</option>';
+    if (developerFilter) developerFilter.innerHTML = '<option value="">Todos desenvolvedores</option>';
     developers.forEach(dev => {
       const opt = document.createElement('option');
       opt.value = dev.id;
       opt.textContent = dev.name;
-      developerSelect.appendChild(opt);
-      const opt2 = opt.cloneNode(true);
-      developerFilter.appendChild(opt2);
+      if (developerSelect) developerSelect.appendChild(opt);
+      if (developerFilter) {
+        const opt2 = opt.cloneNode(true);
+        developerFilter.appendChild(opt2);
+      }
     });
   }
 
@@ -63,17 +88,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     categories = await res.json();
 
     const container = document.getElementById('categories-container');
-    container.innerHTML = '';
+    if (container) container.innerHTML = '';
 
-  // Preenche também o select de filtro de categorias
-  categoryFilter.innerHTML = '<option value="">Todas categorias</option>';
+  // Preenche também o select de filtro de categorias (se existir)
+  if (categoryFilter) categoryFilter.innerHTML = '<option value="">Todas categorias</option>';
 
     categories.forEach(cat => {
       // adiciona opção no filtro
       const opt = document.createElement('option');
       opt.value = cat.id;
       opt.textContent = cat.name;
-      categoryFilter.appendChild(opt);
+  if (categoryFilter) categoryFilter.appendChild(opt);
 
       const div = document.createElement('div');
       div.classList.add('category-item');
@@ -81,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <input type="checkbox" id="cat-${cat.id}" name="categories" value="${cat.id}">
         <label for="cat-${cat.id}">${cat.name}</label>
       `;
-      container.appendChild(div);
+      if (container) container.appendChild(div);
     });
 }
 
@@ -90,72 +115,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadGames() {
     const res = await fetch(`${API_BASE_URL}/games`);
     games = await res.json();
-    renderGames(games);
+    if (gamesContainer) renderGames(games);
   }
 
   // Renderizar jogos em cards
   function renderGames(gamesToRender) {
+    if (!gamesContainer) return;
     gamesContainer.innerHTML = '';
-    if (gamesToRender.length === 0) {
-      gamesContainer.innerHTML = '<div class="no-games">Nenhum jogo encontrado.</div>';
+    if (!Array.isArray(gamesToRender) || gamesToRender.length === 0) {
+      gamesContainer.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#bdb76b;padding:18px">Nenhum jogo encontrado.</td></tr>';
       return;
     }
     gamesToRender.forEach(game => {
-      const gameCard = document.createElement('div');
-      gameCard.className = 'game-card';
-
-      // Imagem base64 ou padrão
-      let imageSrc = game.image ? game.image : '/../assets/no-image.png';
-
-      // Desenvolvedor (objeto)
       const devName = game.developer?.name || 'Desconhecido';
-
-      // Categorias (array de strings OU objetos)
       const catNames = Array.isArray(game.categories)
-        ? game.categories.map(cat =>
-            typeof cat === 'string'
-              ? cat
-              : (cat && cat.name ? cat.name : '')
-          ).filter(Boolean)
+        ? game.categories.map(cat => (typeof cat === 'string' ? cat : (cat && cat.name ? cat.name : ''))).filter(Boolean)
         : [];
 
-      gameCard.innerHTML = `
-        <div class="game-card-image">
-          <img src="${imageSrc}" alt="${game.name}" onerror="this.onerror=null;this.src='/../assets/no-image.png'">
-        </div>
-        <div class="game-card-info">
-          <h3>${game.name}</h3>
-          <p class="game-price">${game.price ? `R$ ${parseFloat(game.price).toFixed(2)}` : 'Grátis'}</p>
-          <p class="game-developer">Desenvolvedor: ${devName}</p>
-          <div class="game-categories">
-            ${catNames.length > 0 ? catNames.map(n => `<span class="category-tag">${n}</span>`).join('') : '<span class="category-tag">Sem categoria</span>'}
-          </div>
-        </div>
-        <div class="data-card-actions">
-          <button class="edit-btn" data-id="${game.id}">
-            <img src="/../assets/edit-icon.png" alt="Editar">
-          </button>
-          <button class="delete-btn" data-id="${game.id}">
-            <img src="/../assets/delete-icon.png" alt="Excluir">
-          </button>
-        </div>
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${game.id}</td>
+        <td>${escapeHtml(game.name)}</td>
+        <td>${game.price ? `R$ ${parseFloat(game.price).toFixed(2)}` : 'Grátis'}</td>
+        <td>${escapeHtml(devName)}</td>
+        <td>${catNames.map(c=>`<span class="category-tag">${escapeHtml(c)}</span>`).join(' ')}</td>
       `;
-      gamesContainer.appendChild(gameCard);
+      gamesContainer.appendChild(tr);
     });
+    // Ações removidas (não há botões na tabela)
+  }
 
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => editGame(parseInt(btn.dataset.id)));
-    });
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => deleteGame(parseInt(btn.dataset.id)));
-    });
+  function escapeHtml(text) {
+    if (text == null) return '';
+    return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   // Filtro de busca e selects
   function filterGames() {
-    const searchTerm = gameSearchInput.value.toLowerCase();
-    const selectedCategory = categoryFilter.value ? parseInt(categoryFilter.value) : null;
-    const selectedDeveloper = developerFilter.value ? parseInt(developerFilter.value) : null;
+  const searchTerm = (gameSearchInput && gameSearchInput.value) ? gameSearchInput.value.toLowerCase() : '';
+  const selectedCategory = (categoryFilter && categoryFilter.value) ? parseInt(categoryFilter.value) : null;
+  const selectedDeveloper = (developerFilter && developerFilter.value) ? parseInt(developerFilter.value) : null;
     const filtered = games.filter(game => {
       const matchesSearch = game.name.toLowerCase().includes(searchTerm);
       const matchesCategory = selectedCategory
@@ -217,10 +216,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           removeImageBtn.style.display = 'block';
           currentImageBase64 = game.image;
         }
+        const deleteGameBtn = document.getElementById('delete-game-btn');
+        if (deleteGameBtn) deleteGameBtn.style.display = 'inline-block';
       }
     } else {
       modalTitle.textContent = 'Adicionar Novo Jogo';
       currentImageId = null;
+      const deleteGameBtn = document.getElementById('delete-game-btn');
+      if (deleteGameBtn) deleteGameBtn.style.display = 'none';
     }
     modal.style.display = 'block';
   }
@@ -286,22 +289,51 @@ async function handleFormSubmit(e) {
     };
 
     // 1) Envia os dados do jogo (sem imagem ainda)
-let url = `${API_BASE_URL}/games`;
-let method = 'POST';
+    let url = `${API_BASE_URL}/games`;
+    let method = 'POST';
 
-if (editingGameId) {
-  url = `${API_BASE_URL}/games/${editingGameId}`;
-  method = 'PUT';
-}
+    if (editingGameId) {
+      url = `${API_BASE_URL}/games/${editingGameId}`;
+      method = 'PUT';
+    } else if (searchedId) {
+      // criar com id informado na busca
+      newGame.id = searchedId;
+    }
 
-const res = await fetch(url, {
-  method,
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(newGame)
-});
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newGame)
+    });
 
 
     if (!res.ok) {
+      if (method === 'PUT') {
+        // antes de PUT, confirmamos via GET
+        const check = await fetch(`${API_BASE_URL}/games/${editingGameId}`);
+        if (!check.ok && check.status === 404) {
+          const doCreate = confirm('Jogo não encontrado. Deseja criar com este ID?');
+          if (doCreate) {
+            newGame.id = editingGameId;
+            const r2 = await fetch(`${API_BASE_URL}/games`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newGame)
+            });
+            if (!r2.ok) {
+              const t2 = await r2.text();
+              throw new Error(`Erro ao criar jogo: ${t2}`);
+            }
+            const savedGame2 = await r2.json();
+            await uploadImage(savedGame2.id, currentImageBase64);
+            alert('Jogo criado com sucesso!');
+            location.reload();
+            return;
+          }
+          throw new Error('Operação cancelada pelo usuário');
+        }
+      }
+
       const errText = await res.text();
       throw new Error(`Erro ao salvar jogo: ${errText}`);
     }
@@ -327,6 +359,29 @@ const res = await fetch(url, {
     alert('Erro ao salvar jogo. Veja o console.');
   }
 }
+
+  async function buscarPorId() {
+    const id = searchIdInput.value.trim();
+    if (!id) { showMessage('Digite um ID para buscar', 'warning'); return; }
+    try {
+      const r = await fetch(`${API_BASE_URL}/games/${id}`);
+      if (r.ok) {
+        const game = await r.json();
+        showGameForm(game.id);
+        showMessage('Jogo encontrado!', 'success');
+      } else if (r.status === 404) {
+        showGameForm();
+        document.getElementById('game-id').value = id;
+        searchedId = parseInt(id, 10);
+        showMessage('Jogo não encontrado. Pode incluir com este ID.', 'info');
+      } else {
+        throw new Error('Erro na busca');
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage('Erro ao buscar jogo', 'error');
+    }
+  }
 
   // Imagem base64
   function handleImageUpload(e) {

@@ -33,27 +33,44 @@ async function listGames(req, res) {
   }
 }
 
-// Criar novo jogo
+async function getGame(req, res) {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    const result = await pool.query('SELECT * FROM games WHERE id=$1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    handleError(res, err, 'obter jogo');
+  }
+}
+
+// Criar novo jogo (aceita id opcional)
 async function createGame(req, res) {
   try {
-    const { name, description, price, release_date, developer_id, categories } = req.body;
+    const { id, name, description, price, release_date, developer_id, categories } = req.body;
 
-    // 1. Insere o jogo
+    if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+    if (id !== undefined && id !== null) {
+      const exists = await pool.query('SELECT id FROM games WHERE id=$1', [id]);
+      if (exists.rowCount > 0) return res.status(409).json({ error: 'Jogo com esse ID já existe' });
+    }
+
     const result = await pool.query(
-      `INSERT INTO games (name, description, price, release_date, developer_id)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO games (id, name, description, price, release_date, developer_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [name, description, price, release_date, developer_id]
+      [id, name, description, price, release_date, developer_id]
     );
     const game = result.rows[0];
 
-    // 2. Insere categorias relacionadas
-    if (categories && categories.length > 0) {
+    if (Array.isArray(categories) && categories.length > 0) {
+      // verifica se as categorias existem antes de inserir
       for (const catId of categories) {
-        await pool.query(
-          `INSERT INTO game_category (game_id, category_id) VALUES ($1, $2)`,
-          [game.id, catId]
-        );
+        const c = await pool.query('SELECT id FROM category WHERE id=$1', [catId]);
+        if (c.rowCount === 0) continue; // ignora categorias inexistentes
+        await pool.query('INSERT INTO game_category (game_id, category_id) VALUES ($1,$2)', [game.id, catId]);
       }
     }
 
@@ -64,31 +81,32 @@ async function createGame(req, res) {
   }
 }
 
-// Atualizar jogo existente
+// Atualizar jogo (upsert: se não existir, cria com o id informado)
 async function updateGame(req, res) {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id, 10);
     const { name, description, price, release_date, developer_id, categories } = req.body;
 
-    // 1. Atualiza os dados do jogo
+    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+    if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+    // busca por id primeiro
+    const existing = await pool.query('SELECT * FROM games WHERE id=$1', [id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+
     const result = await pool.query(
-      `UPDATE games
-       SET name=$1, description=$2, price=$3, release_date=$4, developer_id=$5
-       WHERE id=$6
-       RETURNING *`,
+      `UPDATE games SET name=$1, description=$2, price=$3, release_date=$4, developer_id=$5 WHERE id=$6 RETURNING *`,
       [name, description, price, release_date, developer_id, id]
     );
     const game = result.rows[0];
 
-    // 2. Atualiza categorias somente se `categories` for fornecido
     if (typeof categories !== 'undefined') {
-      await pool.query(`DELETE FROM game_category WHERE game_id=$1`, [id]);
+      await pool.query('DELETE FROM game_category WHERE game_id=$1', [id]);
       if (Array.isArray(categories) && categories.length > 0) {
         for (const catId of categories) {
-          await pool.query(
-            `INSERT INTO game_category (game_id, category_id) VALUES ($1, $2)`,
-            [id, catId]
-          );
+          const c = await pool.query('SELECT id FROM category WHERE id=$1', [catId]);
+          if (c.rowCount === 0) continue;
+          await pool.query('INSERT INTO game_category (game_id, category_id) VALUES ($1, $2)', [id, catId]);
         }
       }
     }
@@ -103,12 +121,16 @@ async function updateGame(req, res) {
 async function deleteGame(req, res) {
   try {
     const { id } = req.params;
-    await pool.query(`DELETE FROM game_category WHERE game_id=$1`, [id]);
-    await pool.query(`DELETE FROM games WHERE id=$1`, [id]);
+    // verifica existência
+    const found = await pool.query('SELECT id FROM games WHERE id=$1', [id]);
+    if (found.rowCount === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+
+    await pool.query('DELETE FROM game_category WHERE game_id=$1', [id]);
+    await pool.query('DELETE FROM games WHERE id=$1', [id]);
     res.status(204).send();
   } catch (err) {
     handleError(res, err, 'deletar jogo');
   }
 }
 
-module.exports = { listGames, createGame, updateGame, deleteGame };
+module.exports = { listGames, getGame, createGame, updateGame, deleteGame };

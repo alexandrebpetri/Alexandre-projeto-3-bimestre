@@ -15,17 +15,15 @@
     <div class="admin-title">
       <h1>Gerenciar Categorias</h1>
     </div>
-    <button id="add-btn" class="primary-button add-button">
-      <img src="/../assets/add-icon.png" alt="Adicionar" class="button-icon">
-      Nova Categoria
-    </button>
+    <!-- botão de adicionar removido conforme solicitado -->
   </header>
 
   <main class="admin-main-content">
     <div class="admin-toolbar">
-      <div class="search-box">
-        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
-        <input type="text" id="category-search" placeholder="Buscar">
+      <div class="id-search-box">
+        <label for="search-id">Buscar por ID:</label>
+        <input type="number" id="search-id" placeholder="Digite o ID">
+        <button id="btn-search-id" class="primary-button">🔍 Buscar</button>
       </div>
     </div>
 
@@ -43,6 +41,7 @@
             <input type="text" id="category-name" required>
           </div>
           <div class="form-actions">
+            <button type="button" class="secondary-button" id="delete-category-btn" style="display:none;background:#8b0000;color:#fff;border-color:#8b0000;margin-right:8px;">Excluir</button>
             <button type="button" class="secondary-button" id="cancel-category-btn">Cancelar</button>
             <button type="submit" class="primary-button">Salvar Categoria</button>
           </div>
@@ -50,8 +49,19 @@
       </div>
     </div>
 
-    <!-- Lista de Categorias -->
-    <div class="categories-grid" id="categories-container"></div>
+    <!-- Lista de Categorias em tabela -->
+    <div class="table-wrapper">
+      <table class="data-table" id="categories-table">
+        <thead>
+          <tr>
+            <th style="width:80px">ID</th>
+            <th>Nome</th>
+            <!-- coluna 'Ações' removida -->
+          </tr>
+        </thead>
+        <tbody id="categories-container"></tbody>
+      </table>
+    </div>
   </main>
   <script type="module" src="categories.js"></script>
 </body>

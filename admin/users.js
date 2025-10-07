@@ -23,15 +23,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([loadStatuses(), loadUsers()]);
 
   // Eventos
-  userSearchInput.addEventListener('input', filterUsers);
+  userSearchInput && userSearchInput.addEventListener('input', filterUsers);
+  const userIdSearchInput = document.getElementById('user-id-search');
+  const userIdSearchBtn = document.getElementById('user-id-search-btn');
+  userIdSearchBtn && userIdSearchBtn.addEventListener('click', buscarPorId);
   closeModal.addEventListener('click', hideModal);
   cancelBtn && cancelBtn.addEventListener('click', hideModal);
   statusForm.addEventListener('submit', handleStatusSubmit);
+  // (opção de excluir removida do CRUD de usuários)
 
   // Carrega status disponíveis
 async function loadStatuses() {
   try {
-    const res = await fetch(`${API_BASE_URL}/users/status`);
+  const res = await fetch(`${API_BASE_URL}/users/statuses`);
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error('Erro ao carregar status:', res.status, txt);
+      throw new Error(txt || `Status ${res.status}`);
+    }
     statuses = await res.json();
     populateStatusSelect();
   } catch (err) {
@@ -63,9 +72,15 @@ async function loadStatuses() {
   async function loadUsers() {
     try {
       const res = await fetch(`${API_BASE_URL}/users`); // endpoint esperado
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error('Erro ao carregar usuários (status):', res.status, txt);
+        throw new Error(txt || `Status ${res.status}`);
+      }
       users = await res.json();
       renderUsers(users);
     } catch (err) {
+      console.error('Erro no loadUsers:', err);
       showMessage('Erro ao carregar usuários.', 'error');
       users = [];
       renderUsers([]);
@@ -74,33 +89,20 @@ async function loadStatuses() {
 
   function renderUsers(list) {
     usersContainer.innerHTML = '';
-    if (!list || list.length === 0) {
-      usersContainer.innerHTML = '<div class="no-developers">Nenhum usuário encontrado.</div>';
+    if (!Array.isArray(list) || list.length === 0) {
+      usersContainer.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#bdb76b;padding:18px">Nenhum usuário encontrado.</td></tr>';
       return;
     }
 
     list.forEach(u => {
-      const card = document.createElement('div');
-      card.className = 'developer-card'; // reaproveita classe para visual igual
-      card.innerHTML = `
-        <div style="flex:1">
-          <div class="developer-info">#${u.id} — ${escapeHtml(u.email)}</div>
-          <div style="color:#bdb76b; margin-top:6px;">${escapeHtml(u.nickname)} • ${renderStatusName(u.user_status)}</div>
-        </div>
-        <div class="card-actions">
-          <button class="edit-btn" data-id="${u.id}" title="Editar Status" ${u.id === 1 ? 'disabled' : ''}>
-            <img src="/../assets/edit-icon.png" alt="Editar" class="icon-medium">
-          </button>
-        </div>
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.id}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(u.nickname)}</td>
+        <td>${escapeHtml(renderStatusName(u.user_status))}</td>
       `;
-      usersContainer.appendChild(card);
-    });
-
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const id = Number(e.currentTarget.dataset.id);
-        openEditModal(id);
-      });
+      usersContainer.appendChild(tr);
     });
   }
 
@@ -119,7 +121,7 @@ async function loadStatuses() {
 
   // Busca/filtra
   function filterUsers() {
-    const term = userSearchInput.value.trim().toLowerCase();
+    const term = (userSearchInput && userSearchInput.value) ? userSearchInput.value.trim().toLowerCase() : '';
     const filtered = users.filter(u => {
       return (u.email && u.email.toLowerCase().includes(term)) ||
              (u.nickname && u.nickname.toLowerCase().includes(term)) ||
@@ -149,6 +151,91 @@ async function loadStatuses() {
     else if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
 
     modal.style.display = 'block';
+  }
+
+  // Busca por ID chamando backend. Se encontrar: abre modal para editar status.
+  async function buscarPorId() {
+    const raw = userIdSearchInput.value.trim();
+    if (!raw) return showMessage('Informe um ID para buscar.', 'error');
+    const id = Number(raw);
+    if (!Number.isFinite(id) || id <= 0) return showMessage('ID inválido.', 'error');
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/${id}`);
+      if (res.status === 200) {
+        const u = await res.json();
+        // abre modal para edição de status
+        if (u.id === 1) return showMessage('O Admin_Supremo não pode ter o status alterado.', 'error');
+        userIdInput.value = u.id;
+        userIdent.textContent = `#${u.id} — ${u.email} (${u.nickname})`;
+        const option = Array.from(statusSelect.options).find(opt => Number(opt.value) === Number(u.user_status));
+        if (option) option.selected = true;
+        else if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
+        modal.style.display = 'block';
+        return;
+      }
+
+      if (res.status === 404) {
+        // não encontrado: abrir formulário de criação simples
+        // vamos aproveitar o modal e apresentar campos mínimos para criar
+        openCreateModalWithId(id);
+        return;
+      }
+
+      const text = await res.text();
+      throw new Error(text || 'Erro ao buscar usuário');
+    } catch (err) {
+      console.error(err);
+      showMessage('Erro ao buscar usuário por ID.', 'error');
+    }
+  }
+
+  function openCreateModalWithId(id) {
+    // substitui temporariamente o conteúdo do modal para criar usuário com id informado
+    // cria inputs dinâmicos
+    userIdInput.value = id;
+    userIdent.textContent = `Criar usuário com ID #${id}`;
+    // assegurar que o select de status existe
+    if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
+    // troca o handler do submit para criar usuário quando modal estiver em modo create
+    statusForm.removeEventListener('submit', handleStatusSubmit);
+    statusForm.addEventListener('submit', handleCreateFromModal);
+    modal.style.display = 'block';
+  }
+
+  async function handleCreateFromModal(e) {
+    e.preventDefault();
+    const id = Number(userIdInput.value);
+    const email = prompt('Email do novo usuário:');
+    if (!email) return showMessage('Email é obrigatório.', 'error');
+    const nickname = prompt('Nickname do novo usuário:');
+    if (!nickname) return showMessage('Nickname é obrigatório.', 'error');
+    const password = prompt('Senha do novo usuário:');
+    if (!password) return showMessage('Senha é obrigatória.', 'error');
+    const confirmPassword = prompt('Confirme a senha:');
+    if (password !== confirmPassword) return showMessage('Senhas diferentes.', 'error');
+    const status = Number(statusSelect.value) || 2;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, email, nickname, password, confirmPassword, adminCode: '' })
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Erro ao criar usuário');
+      }
+      showMessage('Usuário criado com sucesso!', 'success');
+      // restaura handler original
+      statusForm.removeEventListener('submit', handleCreateFromModal);
+      statusForm.addEventListener('submit', handleStatusSubmit);
+      hideModal();
+      await loadUsers();
+    } catch (err) {
+      console.error(err);
+      showMessage('Erro ao criar usuário.', 'error');
+    }
   }
 
   function hideModal() {

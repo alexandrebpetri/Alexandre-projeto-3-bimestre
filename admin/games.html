@@ -15,21 +15,14 @@
     <div class="admin-title">
       <h1>Gerenciar Jogos</h1>
     </div>
-    <button id="add-btn" class="primary-button">
-      <img src="/../assets/add-icon.png" alt="Adicionar" class="button-icon">
-      Novo Jogo
-    </button>
   </header>
 
   <main class="admin-main-content">
     <div class="admin-toolbar">
-      <div class="search-box">
-        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
-        <input type="text" id="game-search" placeholder="Buscar">
-      </div>
-      <div class="filter-controls">
-        <select id="category-filter"><option value="">Todas categorias</option></select>
-        <select id="developer-filter"><option value="">Todos desenvolvedores</option></select>
+      <div class="id-search-box">
+        <label for="search-id">Buscar por ID:</label>
+        <input type="number" id="search-id" placeholder="Digite o ID">
+        <button id="btn-search-id" class="primary-button">🔍 Buscar</button>
       </div>
     </div>
 
@@ -77,6 +70,7 @@
             </div>
           </div>
           <div class="form-actions">
+            <button type="button" class="secondary-button" id="delete-game-btn" style="display:none;background:#8b0000;color:#fff;border-color:#8b0000;margin-right:8px;">Excluir</button>
             <button type="button" class="secondary-button" id="cancel-game-btn">Cancelar</button>
             <button type="submit" class="primary-button">Salvar Jogo</button>
           </div>
@@ -84,8 +78,22 @@
       </div>
     </div>
 
-    <!-- Lista de Jogos -->
-    <div class="games-grid" id="games-container"></div>
+    <!-- Lista de Jogos em tabela -->
+    <div class="table-wrapper">
+      <table class="data-table" id="games-table">
+        <thead>
+          <tr>
+            <th style="width:80px">ID</th>
+            <th>Nome</th>
+            <th style="width:100px">Preço</th>
+            <th style="width:140px">Desenvolvedor</th>
+            <th>Categorias</th>
+            <!-- coluna 'Ações' removida -->
+          </tr>
+        </thead>
+        <tbody id="games-container"></tbody>
+      </table>
+    </div>
   </main>
   <script type="module" src="games.js"></script>
 </body>

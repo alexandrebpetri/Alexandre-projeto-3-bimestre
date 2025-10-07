@@ -28,11 +28,9 @@ async function uploadImage(req, res) {
 
     // Verifica se o jogo existe
     const gameCheck = await pool.query('SELECT id FROM games WHERE id=$1', [gameId]);
-    if (gameCheck.rowCount === 0) {
-      return res.status(404).json({ error: 'Jogo não encontrado' });
-    }
+    if (gameCheck.rowCount === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
 
-    const existing = await pool.query('SELECT * FROM image WHERE game_id=$1', [gameId]);
+  const existing = await pool.query('SELECT * FROM image WHERE game_id=$1', [gameId]);
 
     let img;
     if (existing.rows.length > 0) {
@@ -67,6 +65,10 @@ async function getImage(req, res) {
 async function deleteImage(req, res) {
   try {
     const { id } = req.params;
+    // verifica existência
+    const found = await pool.query('SELECT id FROM image WHERE id=$1', [id]);
+    if (found.rowCount === 0) return res.status(404).json({ error: 'Imagem não encontrada' });
+
     await pool.query(`UPDATE games SET image_id=NULL WHERE image_id=$1`, [id]);
     await pool.query(`DELETE FROM image WHERE id=$1`, [id]);
     res.status(204).send();

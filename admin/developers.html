@@ -15,17 +15,14 @@
     <div class="admin-title">
       <h1>Gerenciar Desenvolvedores</h1>
     </div>
-    <button id="add-btn" class="primary-button add-button">
-      <img src="/../assets/add-icon.png" alt="Adicionar" class="button-icon">
-      Novo Desenvolvedor
-    </button>
   </header>
 
   <main class="admin-main-content">
     <div class="admin-toolbar">
-      <div class="search-box">
-        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
-        <input type="text" id="developer-search" placeholder="Buscar">
+      <div class="id-search-box">
+        <label for="search-id">Buscar por ID:</label>
+        <input type="number" id="search-id" placeholder="Digite o ID">
+        <button id="btn-search-id" class="primary-button">🔍 Buscar</button>
       </div>
     </div>
 
@@ -43,6 +40,7 @@
             <input type="text" id="developer-name" required>
           </div>
           <div class="form-actions">
+            <button type="button" class="secondary-button" id="delete-developer-btn" style="display:none;background:#8b0000;color:#fff;border-color:#8b0000;margin-right:8px;">Excluir</button>
             <button type="button" class="secondary-button" id="cancel-developer-btn">Cancelar</button>
             <button type="submit" class="primary-button">Salvar Desenvolvedor</button>
           </div>
@@ -50,8 +48,19 @@
       </div>
     </div>
 
-    <!-- Lista de Desenvolvedores -->
-    <div class="developers-grid" id="developers-container"></div>
+    <!-- Lista de Desenvolvedores em tabela -->
+    <div class="table-wrapper">
+      <table class="data-table" id="developers-table">
+        <thead>
+          <tr>
+            <th style="width:80px">ID</th>
+            <th>Nome</th>
+            <!-- coluna 'Ações' removida -->
+          </tr>
+        </thead>
+        <tbody id="developers-container"></tbody>
+      </table>
+    </div>
   </main>
   <script type="module" src="developers.js"></script>
 </body>

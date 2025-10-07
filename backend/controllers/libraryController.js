@@ -93,8 +93,10 @@ async function deleteLibraryById(req, res) {
   if (!lid || Number.isNaN(lid)) return res.status(400).json({ error: 'id inválido.' });
 
   try {
-    const result = await pool.query('DELETE FROM library WHERE id=$1 RETURNING *', [lid]);
-    if (result.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    // verifica existência primeiro
+    const found = await pool.query('SELECT id FROM library WHERE id=$1', [lid]);
+    if (found.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    await pool.query('DELETE FROM library WHERE id=$1', [lid]);
     return res.status(200).json({ message: 'Removido com sucesso.' });
   } catch (err) {
     handleError(res, err, 'remover item da biblioteca');
@@ -109,12 +111,57 @@ async function deleteLibraryByUserGame(req, res) {
   if (!uid || !gid || Number.isNaN(uid) || Number.isNaN(gid)) return res.status(400).json({ error: 'userId e gameId válidos são obrigatórios.' });
 
   try {
-    const result = await pool.query('DELETE FROM library WHERE user_id=$1 AND game_id=$2 RETURNING *', [uid, gid]);
-    if (result.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    const found = await pool.query('SELECT id FROM library WHERE user_id=$1 AND game_id=$2', [uid, gid]);
+    if (found.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    await pool.query('DELETE FROM library WHERE user_id=$1 AND game_id=$2', [uid, gid]);
     return res.status(200).json({ message: 'Removido com sucesso.' });
   } catch (err) {
     handleError(res, err, 'remover item da biblioteca');
   }
 }
 
-module.exports = { addToLibrary, listLibraryByUser, deleteLibraryById, deleteLibraryByUserGame };
+async function getLibraryItemById(req, res) {
+  const { id } = req.params;
+  const lid = parseInt(id, 10);
+  if (!lid || Number.isNaN(lid)) return res.status(400).json({ error: 'id inválido.' });
+
+  try {
+    const result = await pool.query('SELECT * FROM library WHERE id=$1', [lid]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado.' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    handleError(res, err, 'buscar item biblioteca');
+  }
+}
+
+// Upsert: se existir atualiza as colunas user_id e game_id, se não cria com o id informado
+async function upsertLibraryItem(req, res) {
+  const id = parseInt(req.params.id, 10);
+  let { userId, gameId } = req.body;
+  userId = userId ? parseInt(userId, 10) : null;
+  gameId = gameId ? parseInt(gameId, 10) : null;
+
+  if (isNaN(id) || !userId || !gameId) return res.status(400).json({ error: 'id, userId e gameId válidos são obrigatórios.' });
+
+  try {
+    // busca por id primeiro: se não existir, retorna 404 (não cria via PUT)
+    const existing = await pool.query('SELECT * FROM library WHERE id=$1', [id]);
+    if (existing.rowCount === 0) return res.status(404).json({ error: 'Registro não encontrado' });
+
+    // verifica existência do usuário e jogo
+    const userCheck = await pool.query('SELECT id FROM users WHERE id=$1', [userId]);
+    if (userCheck.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    const gameCheck = await pool.query('SELECT id FROM games WHERE id=$1', [gameId]);
+    if (gameCheck.rowCount === 0) return res.status(404).json({ error: 'Jogo não encontrado.' });
+
+    const update = await pool.query('UPDATE library SET user_id=$1, game_id=$2 WHERE id=$3 RETURNING *', [userId, gameId, id]);
+    res.json(update.rows[0]);
+  } catch (err) {
+    if (err && (err.code === '23505' || err.constraint === 'library_user_game_unique')) {
+      return res.status(409).json({ message: 'Jogo já presente na biblioteca.' });
+    }
+    handleError(res, err, 'upsert biblioteca');
+  }
+}
+
+module.exports = { addToLibrary, listLibraryByUser, deleteLibraryById, deleteLibraryByUserGame, getLibraryItemById, upsertLibraryItem };

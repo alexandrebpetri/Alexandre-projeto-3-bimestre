@@ -22,11 +22,11 @@
 
   <main class="admin-main-content">
     <div class="admin-toolbar">
-      <div class="search-box">
-        <img src="/../assets/search-icon.png" alt="Buscar" class="search-icon">
-        <input type="text" id="user-search" placeholder="Buscar por email ou nickname">
+      <div class="id-search-box">
+        <label for="user-id-search">Buscar por ID:</label>
+        <input type="number" id="user-id-search" placeholder="Digite o ID" style="width:120px; padding:8px; border-radius:6px; background:#181818; color:#fff; border:1px solid #bdb76b;">
+        <button id="user-id-search-btn" class="secondary-button">🔍 Buscar</button>
       </div>
-      <div style="flex:1"></div>
     </div>
 
     <div class="message-container" id="message-container"></div>
@@ -55,8 +55,21 @@
       </div>
     </div>
 
-    <!-- Lista de usuários -->
-    <div class="categories-grid" id="users-container"></div>
+    <!-- Lista de usuários em tabela -->
+    <div class="table-wrapper">
+      <table class="data-table" id="users-table">
+        <thead>
+          <tr>
+            <th style="width:80px">ID</th>
+            <th>Email</th>
+            <th>Nickname</th>
+            <th style="width:160px">Status</th>
+            <!-- coluna 'Ações' removida -->
+          </tr>
+        </thead>
+        <tbody id="users-container"></tbody>
+      </table>
+    </div>
   </main>
 
   <script type="module" src="users.js"></script>

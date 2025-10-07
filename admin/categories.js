@@ -9,20 +9,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cancelBtn = document.getElementById('cancel-category-btn');
   const addCategoryBtn = document.getElementById('add-btn');
   const messageContainer = document.getElementById('message-container');
+  // campo de busca global removido da UI; mantemos apenas busca por ID
   const categorySearchInput = document.getElementById('category-search');
 
   let categories = [];
   let editingCategoryId = null;
+  let searchedId = null; // id usado no fluxo buscar/incluir
 
   // Inicialização
   await loadCategories();
 
-  // Event Listeners
-  addCategoryBtn.addEventListener('click', () => showCategoryForm());
+  // Event Listeners — botão 'Adicionar' e buscas globais foram removidos da interface
+  const btnSearchId = document.getElementById('btn-search-id');
+  const searchIdInput = document.getElementById('search-id');
+  if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
   closeModal.addEventListener('click', () => hideModal());
   cancelBtn && cancelBtn.addEventListener('click', () => hideModal());
+  const deleteCategoryBtn = document.getElementById('delete-category-btn');
+  deleteCategoryBtn && deleteCategoryBtn.addEventListener('click', async () => {
+    const id = document.getElementById('category-id').value;
+    if (!id) return showMessage('ID inválido para exclusão', 'error');
+    if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Erro ao excluir');
+      }
+      showMessage('Categoria excluída!', 'success');
+      hideModal();
+      await loadCategories();
+    } catch (err) {
+      console.error(err);
+      showMessage('Falha ao excluir categoria.', 'error');
+    }
+  });
   categoryForm.addEventListener('submit', handleFormSubmit);
-  categorySearchInput.addEventListener('input', filterCategories);
 
   // Carregar categorias
   async function loadCategories() {
@@ -34,32 +56,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Renderizar categorias em cards
   function renderCategories(catsToRender) {
     categoriesContainer.innerHTML = '';
-    if (catsToRender.length === 0) {
-      categoriesContainer.innerHTML = '<div class="no-categories">Nenhuma categoria encontrada.</div>';
+    if (!Array.isArray(catsToRender) || catsToRender.length === 0) {
+      categoriesContainer.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#bdb76b;padding:18px">Nenhuma categoria encontrada.</td></tr>';
       return;
     }
     catsToRender.forEach(cat => {
-      const catCard = document.createElement('div');
-      catCard.className = 'category-card';
-      catCard.innerHTML = `
-        <div class="category-info">${cat.name}</div>
-        <div class="card-actions">
-          <button class="edit-btn" title="Editar" data-id="${cat.id}">
-            <img src="../../assets/edit-icon.png" alt="Editar" class="icon-medium">
-          </button>
-          <button class="delete-btn" title="Excluir" data-id="${cat.id}">
-            <img src="../../assets/delete-icon.png" alt="Excluir" class="icon-medium">
-          </button>
-        </div>
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${cat.id}</td>
+        <td>${escapeHtml(cat.name)}</td>
       `;
-      categoriesContainer.appendChild(catCard);
+      categoriesContainer.appendChild(tr);
     });
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', e => editCategory(e.currentTarget.dataset.id));
-    });
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', e => deleteCategory(e.currentTarget.dataset.id));
-    });
+    // Ações removidas (não há botões na tabela)
+  }
+
+  function escapeHtml(text) {
+    if (text == null) return '';
+    return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   // Filtro de busca
@@ -75,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     categoryForm.reset();
     editingCategoryId = null;
     document.getElementById('category-id').value = '';
+    const deleteCategoryBtn = document.getElementById('delete-category-btn');
     if (categoryId) {
       const cat = categories.find(c => c.id == categoryId);
       if (cat) {
@@ -82,9 +97,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('category-name').value = cat.name;
         modalTitle.textContent = 'Editar Categoria';
         editingCategoryId = cat.id;
+        if (deleteCategoryBtn) deleteCategoryBtn.style.display = 'inline-block';
       }
     } else {
       modalTitle.textContent = 'Adicionar Nova Categoria';
+      if (deleteCategoryBtn) deleteCategoryBtn.style.display = 'none';
     }
     modal.style.display = 'block';
   }
@@ -105,15 +122,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const catData = { name };
     try {
       if (categoryId) {
-        // Editar
-        await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
-          method: 'PUT',
+        // Antes de tentar PUT, confirma que existe via GET
+        const check = await fetch(`${API_BASE_URL}/categories/${categoryId}`);
+        if (check.ok) {
+          const resp = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(catData)
+          });
+          if (resp.ok) showMessage('Categoria atualizada com sucesso!', 'success');
+          else throw new Error('Erro ao atualizar categoria');
+        } else if (check.status === 404) {
+          const create = confirm('Categoria não encontrada. Deseja criar com este ID?');
+          if (create) {
+            const payload = { id: parseInt(categoryId, 10), ...catData };
+            const r2 = await fetch(`${API_BASE_URL}/categories`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (r2.ok) showMessage('Categoria criada com sucesso!', 'success');
+            else showMessage('Falha ao criar categoria.', 'error');
+          } else {
+            showMessage('Operação cancelada. Categoria não existe.', 'warning');
+          }
+        } else {
+          throw new Error('Erro ao verificar categoria');
+        }
+      } else if (searchedId) {
+        // Se veio de uma busca por ID e não existe, criar com ID informado
+        const payload = { id: searchedId, ...catData };
+        const resp = await fetch(`${API_BASE_URL}/categories`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(catData)
+          body: JSON.stringify(payload)
         });
-        showMessage('Categoria atualizada com sucesso!', 'success');
+        if (!resp.ok) throw new Error('Erro ao criar com ID');
+        showMessage('Categoria criada com sucesso!', 'success');
       } else {
-        // Criar
+        // Criar normalmente
         await fetch(`${API_BASE_URL}/categories`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -122,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showMessage('Categoria criada com sucesso!', 'success');
       }
       hideModal();
+      searchedId = null;
       await loadCategories();
     } catch (error) {
       showMessage('Erro ao salvar categoria.', 'error');
@@ -136,11 +184,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function deleteCategory(id) {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     try {
-      await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
+      // verifica existência antes
+      const check = await fetch(`${API_BASE_URL}/categories/${id}`);
+      if (!check.ok) {
+        if (check.status === 404) {
+          showMessage('Categoria não encontrada.', 'error');
+          return;
+        }
+        throw new Error('Erro ao verificar categoria');
+      }
+      const del = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
+      if (!del.ok) {
+        const txt = await del.text();
+        throw new Error(txt || 'Falha ao excluir');
+      }
       showMessage('Categoria excluída!', 'success');
       await loadCategories();
     } catch (error) {
       showMessage('Erro ao excluir categoria.', 'error');
+    }
+  }
+
+  // Buscar por ID: se existir carrega o modal em modo editar; se não existir abre modal para incluir com id preenchido
+  async function buscarPorId() {
+    const id = searchIdInput.value.trim();
+    if (!id) { showMessage('Digite um ID para buscar', 'warning'); return; }
+    try {
+      const r = await fetch(`${API_BASE_URL}/categories/${id}`);
+      if (r.ok) {
+            const cat = await r.json();
+            // abre modal de edição com o item encontrado
+            showCategoryForm(cat.id);
+            showMessage('Categoria encontrada! Abra o formulário para editar.', 'success');
+          } else if (r.status === 404) {
+          // abrir modal para criar com ID
+          categoriesContainer.innerHTML = '';
+          showCategoryForm();
+          document.getElementById('category-id').value = id;
+          searchedId = parseInt(id, 10);
+          showMessage('Categoria não encontrada. Pode incluir com este ID.', 'info');
+      } else {
+        throw new Error('Erro na busca');
+      }
+    } catch (err) {
+      console.error(err);
+      showMessage('Erro ao buscar categoria', 'error');
     }
   }
 
@@ -154,6 +242,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       message.remove();
     }, 3000);
   }
+
+  // enableActions removed: tabela não possui botões de ação
 });
 // CRUD de Categorias
 // Estrutura e funções serão implementadas após a criação do HTML
