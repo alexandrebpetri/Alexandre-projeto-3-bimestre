@@ -30,9 +30,19 @@ function searchGames(text) {
 }
 
 export function seeGame(id) {
-  // Navigate relatively so pages inside the `frontend/` folder (like Cart.html)
-  // go to details.html in the same folder instead of 'frontend/frontend/...'
-  window.location.href = `details.html?id=${id}`;
+  // Build a path that works whether the current page is already inside
+  // the `frontend/` folder or is served from the project root.
+  const pathname = window.location.pathname || '';
+  const parts = pathname.split('/').filter(Boolean);
+  let target;
+  if (parts.includes('frontend')) {
+    // current page is inside frontend/, navigate to details.html relatively
+    target = `details.html?id=${id}`;
+  } else {
+    // current page is outside frontend/, navigate into frontend/
+    target = `frontend/details.html?id=${id}`;
+  }
+  window.location.href = target;
 }
 
 window.seeGame = seeGame;
@@ -130,8 +140,8 @@ function showNoUserLogged() {
   `;
   userCard.appendChild(noUserDiv);
 
-  document.getElementById('login-btn').onclick = () => window.location.href = 'login.html';
-  document.getElementById('signin-btn').onclick = () => window.location.href = 'register.html';
+  document.getElementById('login-btn').onclick = () => window.location.href = 'frontend/login.html';
+  document.getElementById('signin-btn').onclick = () => window.location.href = 'frontend/register.html';
 }
 
 // Fechar o card
