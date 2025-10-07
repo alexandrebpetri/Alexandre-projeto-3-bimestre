@@ -1,5 +1,6 @@
 import { loadGamesFromAPI, games } from "../controller/controller.js";
 import { initUserCard } from './userCard.js';
+import { getUserLibraryIds } from './libraryAPI.js';
 
 function formatCategories(categories) {
   if (!categories || categories.length === 0) return 'Nenhuma';
@@ -45,7 +46,16 @@ function loadDetails() {
         </div>
       `;
       const CartButton = document.getElementById('addCart');
-      CartButton.addEventListener('click', () => AddToCart(game));
+      // Se o jogo já estiver na biblioteca, altera o botão para redirecionar
+      (async () => {
+        const owned = await getUserLibraryIds();
+        if (owned.has(game.id)) {
+          CartButton.textContent = 'Ver na biblioteca';
+          CartButton.onclick = () => { window.location.href = 'library.html'; };
+        } else {
+          CartButton.addEventListener('click', () => AddToCart(game));
+        }
+      })();
     } else {
       gamesContainer.innerHTML = '<div class="not-found">Jogo não encontrado!</div>';
     }

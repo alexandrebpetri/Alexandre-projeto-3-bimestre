@@ -1,38 +1,50 @@
 // Módulo compartilhado para o card de usuário usado em várias páginas
 export function initUserCard() {
-  // Handler para abrir o overlay do card
-  const userBtn = document.getElementById('user');
-  if (userBtn) {
-    userBtn.onclick = async function() {
-      const overlay = document.getElementById('user-card-overlay');
-      if (overlay) overlay.style.display = 'flex';
+  // Função que abre o overlay e popula com dados (ou mostra opções de login)
+  async function openUserCard() {
+    const overlay = document.getElementById('user-card-overlay');
+    if (overlay) overlay.style.display = 'flex';
 
-      try {
-        const res = await fetch('http://127.0.0.1:3000/auth/me', { method: 'GET', credentials: 'include' });
-        if (res.ok) {
-          const user = await res.json();
-          if (user && user.authenticated) {
-            const userInfo = document.getElementById('user-info'); if (userInfo) userInfo.style.display = 'block';
-            const emailEl = document.getElementById('user-email'); if (emailEl) emailEl.textContent = user.email || '';
-            const nickEl = document.getElementById('user-nick'); if (nickEl) nickEl.textContent = user.nickname || '';
-            const actions = document.getElementById('user-card-actions'); if (actions) actions.style.display = 'block';
-            renderUserCard(user);
-          } else {
-            showNoUserLogged();
-          }
+    try {
+      const res = await fetch('http://127.0.0.1:3000/auth/me', { method: 'GET', credentials: 'include' });
+      if (res.ok) {
+        const user = await res.json();
+        if (user && user.authenticated) {
+          const userInfo = document.getElementById('user-info'); if (userInfo) userInfo.style.display = 'block';
+          const emailEl = document.getElementById('user-email'); if (emailEl) emailEl.textContent = user.email || '';
+          const nickEl = document.getElementById('user-nick'); if (nickEl) nickEl.textContent = user.nickname || '';
+          const actions = document.getElementById('user-card-actions'); if (actions) actions.style.display = 'block';
+          renderUserCard(user);
         } else {
           showNoUserLogged();
         }
-      } catch (err) {
-        console.error('Erro ao buscar /auth/me:', err);
+      } else {
         showNoUserLogged();
       }
+    } catch (err) {
+      console.error('Erro ao buscar /auth/me:', err);
+      showNoUserLogged();
+    }
 
-      // Reset campos de exclusão
-      const delConfirm = document.getElementById('delete-confirm-fields'); if (delConfirm) delConfirm.style.display = 'none';
-      const delFinal = document.getElementById('delete-final-warning'); if (delFinal) delFinal.style.display = 'none';
-      const delErr = document.getElementById('delete-password-error'); if (delErr) delErr.textContent = '';
-    };
+    // Reset campos de exclusão
+    const delConfirm = document.getElementById('delete-confirm-fields'); if (delConfirm) delConfirm.style.display = 'none';
+    const delFinal = document.getElementById('delete-final-warning'); if (delFinal) delFinal.style.display = 'none';
+    const delErr = document.getElementById('delete-password-error'); if (delErr) delErr.textContent = '';
+  }
+
+  // Handler para abrir o overlay do card — tenta bind direto ao botão, se existir
+  const userBtn = document.getElementById('user');
+  if (userBtn) {
+    userBtn.onclick = openUserCard;
+  } else {
+    // Se o elemento ainda não existir, adiciona um listener delegado no documento
+    if (!document._userCardDelegation) {
+      document._userCardDelegation = true;
+      document.addEventListener('click', function delegatedUserClick(e) {
+        const target = e.target.closest && e.target.closest('#user');
+        if (target) openUserCard();
+      });
+    }
   }
 
   // Fechar card

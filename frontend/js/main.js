@@ -1,12 +1,14 @@
 import { loadGamesFromAPI, games } from '../controller/controller.js';
+import { getUserLibraryIds } from './libraryAPI.js';
 
-function loadGames(list = games) {
+function loadGames(list = games, ownedIds = new Set()) {
   const container = document.getElementById("lista-jogos");
   container.innerHTML = ""; // Limpa a lista antes de renderizar
 
   for (let i = 0; i < list.length; i++) {
     const game = list[i];
     let priceDisplay = game.price === 0 ? "Grátis" : `R$ ${game.price.toFixed(2)}`;
+    if (ownedIds.has(game.id)) priceDisplay = 'Adquirido';
 
     const card = document.createElement("div");
     card.className = "game-card";
@@ -34,10 +36,10 @@ window.seeGame = seeGame;
 window.searchGames = searchGames;
 
 // Carrega os jogos da API e monta os cards
-window.onload = () => {
-  loadGamesFromAPI().then(() => {
-    loadGames();
-  });
+window.onload = async () => {
+  await loadGamesFromAPI();
+  const owned = await getUserLibraryIds();
+  loadGames(games, owned);
 };
 
 // Função para abrir o card ao clicar na foto do usuário

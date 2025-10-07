@@ -20,5 +20,5 @@ async function addIfNotExists(userId, gameId) {
 
 (async () => {
   // Altere aqui os ids se quiser testar outros
-  await addIfNotExists(2, 1);
+  await addIfNotExists();
 })();
