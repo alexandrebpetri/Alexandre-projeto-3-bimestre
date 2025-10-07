@@ -3,6 +3,7 @@ import { getUserLibraryIds } from './libraryAPI.js';
 
 function loadGames(list = games, ownedIds = new Set()) {
   const container = document.getElementById("lista-jogos");
+  if (!container) return; // página não tem lista de jogos -> nada a renderizar
   container.innerHTML = ""; // Limpa a lista antes de renderizar
 
   for (let i = 0; i < list.length; i++) {
@@ -36,43 +37,55 @@ window.seeGame = seeGame;
 window.searchGames = searchGames;
 
 // Carrega os jogos da API e monta os cards
-window.onload = async () => {
-  await loadGamesFromAPI();
-  const owned = await getUserLibraryIds();
-  loadGames(games, owned);
-};
+// Só registra o carregamento e renderização automática de jogos se a página
+// contém o elemento onde os jogos devem ser listados (ex: index.html)
+if (document.getElementById('lista-jogos')) {
+  window.onload = async () => {
+    await loadGamesFromAPI();
+    const owned = await getUserLibraryIds();
+    loadGames(games, owned);
+  };
+}
 
-// Função para abrir o card ao clicar na foto do usuário
-document.getElementById('user').onclick = async function() {
-  const overlay = document.getElementById('user-card-overlay');
-  overlay.style.display = 'flex';
+// Função para abrir o card ao clicar na foto do usuário (se o botão existir)
+const userBtn = document.getElementById('user');
+if (userBtn) {
+  userBtn.onclick = async function() {
+    const overlay = document.getElementById('user-card-overlay');
+    if (overlay) overlay.style.display = 'flex';
 
-  // Busca dados do usuário logado
-  const res = await fetch('http://127.0.0.1:3000/auth/me', {
-    method: 'GET',
-    credentials: 'include'
-  });
+    // Busca dados do usuário logado
+    try {
+      const res = await fetch('http://127.0.0.1:3000/auth/me', {
+        method: 'GET',
+        credentials: 'include'
+      });
 
-  if (res.ok) {
-    const user = await res.json();
-    if (user && user.authenticated) {
-      document.getElementById('user-info').style.display = 'block';
-      document.getElementById('user-email').textContent = user.email || '';
-      document.getElementById('user-nick').textContent = user.nickname || '';
-      document.getElementById('user-card-actions').style.display = 'block';
-      renderUserCard(user); // Chama a função para renderizar o card do usuário
-    } else {
+      if (res.ok) {
+        const user = await res.json();
+        if (user && user.authenticated) {
+          const ui = document.getElementById('user-info'); if (ui) ui.style.display = 'block';
+          const ue = document.getElementById('user-email'); if (ue) ue.textContent = user.email || '';
+          const un = document.getElementById('user-nick'); if (un) un.textContent = user.nickname || '';
+          const actions = document.getElementById('user-card-actions'); if (actions) actions.style.display = 'block';
+          renderUserCard(user); // Chama a função para renderizar o card do usuário
+        } else {
+          showNoUserLogged();
+        }
+      } else {
+        showNoUserLogged();
+      }
+    } catch (err) {
+      console.error('Erro ao buscar /auth/me:', err);
       showNoUserLogged();
     }
-  } else {
-    showNoUserLogged();
-  }
 
-  // Reset campos
-  document.getElementById('delete-confirm-fields').style.display = 'none';
-  document.getElementById('delete-final-warning').style.display = 'none';
-  document.getElementById('delete-password-error').textContent = '';
-};
+    // Reset campos
+    const dcf = document.getElementById('delete-confirm-fields'); if (dcf) dcf.style.display = 'none';
+    const dff = document.getElementById('delete-final-warning'); if (dff) dff.style.display = 'none';
+    const dpe = document.getElementById('delete-password-error'); if (dpe) dpe.textContent = '';
+  };
+}
 
 function renderUserCard(user) {
     const cardTitle = document.getElementById('card-title');

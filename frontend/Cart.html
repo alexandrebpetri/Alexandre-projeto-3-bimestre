@@ -77,6 +77,20 @@
   </div>
 </div>
 
+<!-- Modal de confirmação para adicionar jogos grátis -->
+<div id="freeItemsModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="closeFreeModal" class="close">&times;</span>
+    <h2>Adicionar à Biblioteca</h2>
+    <p>Os seguintes itens são gratuitos e serão adicionados à sua biblioteca:</p>
+    <ul id="free-items-list" style="text-align:left; max-height:300px; overflow:auto; margin:1rem 0; padding-left:1.2rem;"></ul>
+    <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
+      <button id="confirm-add-free" style="background:var(--green); color:var(--white); padding:0.6rem 1.2rem; border-radius:6px;">Confirmar</button>
+      <button id="cancel-add-free" style="background:#666; color:#fff; padding:0.6rem 1.2rem; border-radius:6px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
   <script type="module" src="js/cart.js"></script>
   <script type="module" src="js/libraryIcon.js"></script>
 </body>

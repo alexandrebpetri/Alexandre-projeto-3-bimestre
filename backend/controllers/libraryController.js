@@ -45,6 +45,10 @@ async function addToLibrary(req, res) {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    // Tratamento específico para violação de unique constraint (race condition)
+    if (err && (err.code === '23505' || err.constraint === 'library_user_game_unique')) {
+      return res.status(409).json({ message: 'Jogo já presente na biblioteca.' });
+    }
     handleError(res, err, 'adicionar à biblioteca');
   }
 }

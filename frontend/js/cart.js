@@ -4,6 +4,7 @@ import { getUserLibraryIds } from './libraryAPI.js';
 
 async function loadCart() {
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  console.log('[cart] loadCart start, cart items:', cart.length);
   const container = document.getElementById('cart-container');
   container.innerHTML = '';
 
@@ -66,60 +67,93 @@ async function loadCart() {
 
   // Adicione o evento aqui, pois o botão é criado dinamicamente
   const endBtn = document.getElementById("end-btn");
-  if (endBtn) {
+    if (endBtn) {
+    endBtn.style.cursor = 'pointer';
     // Se o total for zero e existir pelo menos um item, o botão vira 'Adicionar à Biblioteca'
     if (total === 0 && cart.length > 0) {
       endBtn.textContent = 'Adicionar à Biblioteca';
-      endBtn.onclick = async (e) => {
+      console.log('[cart] endBtn present - switching to Add to Library mode');
+      endBtn.onclick = (e) => {
         e.preventDefault();
-        // verifica se está logado
-        const logged = await isUserLoggedIn();
-        if (!logged) { showLoginPopup(); return; }
-        // obtém userId via /auth/me
-        let userId = null;
-        try {
-          const r = await fetch('http://127.0.0.1:3000/auth/me', { method: 'GET', credentials: 'include' });
-          if (r.ok) { const u = await r.json(); if (u && u.authenticated) userId = u.id; }
-        } catch (err) { console.error('Erro ao obter usuário:', err); }
-        if (!userId) userId = localStorage.getItem('userId');
-        if (!userId) { showLoginPopup(); return; }
-
-        // adiciona cada jogo na biblioteca
-        const successes = [];
-        const failures = [];
+        console.log('[cart] endBtn clicked — opening free items modal');
+        // abre modal listando itens grátis e aguarda confirmação
+        const modal = document.getElementById('freeItemsModal');
+        const listEl = document.getElementById('free-items-list');
+        if (!modal) { console.error('[cart] modal element #freeItemsModal not found'); alert('Erro interno: modal não encontrado.'); return; }
+        if (!listEl) { console.error('[cart] list element #free-items-list not found'); alert('Erro interno: list não encontrada.'); return; }
+        listEl.innerHTML = '';
         for (const item of cart) {
-          const gid = item && (item.id || item.gameId) ? (item.id || item.gameId) : null;
-          if (!gid) continue;
-          try {
-            const res = await fetch('http://127.0.0.1:3000/api/library', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ userId, gameId: gid })
-            });
-            if (res.ok || res.status === 201 || res.status === 409) {
-              // 201 criado, 409 já existe — consideramos como sucesso para o usuário
-              successes.push(gid);
-            } else {
-              failures.push({ gid, status: res.status });
-            }
-          } catch (err) {
-            console.error('Erro ao adicionar na biblioteca:', err);
-            failures.push({ gid, error: err.message });
-          }
+          const li = document.createElement('li');
+          li.textContent = item.name || ('Jogo ' + (item.id || ''));
+          listEl.appendChild(li);
+        }
+        modal.style.display = 'flex';
+        modal.style.zIndex = '9999';
+
+        // Handlers temporários para os botões do modal
+        const closeBtn = document.getElementById('closeFreeModal');
+        const cancelBtn = document.getElementById('cancel-add-free');
+        const confirmBtn = document.getElementById('confirm-add-free');
+
+        function cleanup() {
+          modal.style.display = 'none';
+          closeBtn?.removeEventListener('click', onCancel);
+          cancelBtn?.removeEventListener('click', onCancel);
+          confirmBtn?.removeEventListener('click', onConfirm);
         }
 
-        // Limpa carrinho e atualiza UI
-        localStorage.removeItem('cart');
-        localStorage.removeItem('totalCompra');
-        if (successes.length > 0) alert('Itens adicionados à sua biblioteca!');
-        else alert('Nenhum item foi adicionado. Verifique o console para mais detalhes.');
-        loadCart();
-        // opcional: redireciona para a biblioteca
-        window.location.href = 'library.html';
+        async function onConfirm() {
+          // verifica se está logado
+          const logged = await isUserLoggedIn();
+          if (!logged) { cleanup(); showLoginPopup(); return; }
+          // obtém userId via /auth/me
+          let userId = null;
+          try {
+            const r = await fetch('http://127.0.0.1:3000/auth/me', { method: 'GET', credentials: 'include' });
+            if (r.ok) { const u = await r.json(); if (u && u.authenticated) userId = u.id; }
+          } catch (err) { console.error('Erro ao obter usuário:', err); }
+          if (!userId) userId = localStorage.getItem('userId');
+          if (!userId) { cleanup(); showLoginPopup(); return; }
+
+          confirmBtn.disabled = true;
+          cancelBtn.disabled = true;
+
+          const successes = [];
+          const failures = [];
+          for (const item of cart) {
+            const gid = item && (item.id || item.gameId) ? (item.id || item.gameId) : null;
+            if (!gid) continue;
+            try {
+              const res = await fetch('http://127.0.0.1:3000/api/library', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ userId, gameId: gid })
+              });
+              if (res.ok || res.status === 201 || res.status === 409) { successes.push(gid); }
+              else { failures.push({ gid, status: res.status }); }
+            } catch (err) { console.error('Erro ao adicionar na biblioteca:', err); failures.push({ gid, error: err.message }); }
+          }
+
+          // Limpa carrinho e atualiza UI
+          localStorage.removeItem('cart');
+          localStorage.removeItem('totalCompra');
+          cleanup();
+          if (successes.length > 0) alert('Itens adicionados à sua biblioteca!');
+          else alert('Nenhum item foi adicionado. Verifique o console para mais detalhes.');
+          loadCart();
+          window.location.href = 'library.html';
+        }
+
+        function onCancel() { cleanup(); }
+
+        closeBtn?.addEventListener('click', onCancel);
+        cancelBtn?.addEventListener('click', onCancel);
+        confirmBtn?.addEventListener('click', onConfirm);
       };
     } else {
       endBtn.onclick = paymentAddress;
+      console.log('[cart] endBtn present - payment flow assigned');
     }
   }
     localStorage.setItem("totalCompra", total); // valorTotal = número
