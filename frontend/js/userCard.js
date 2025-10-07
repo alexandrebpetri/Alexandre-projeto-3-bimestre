@@ -57,7 +57,7 @@ export function initUserCard() {
     try { await fetch('http://127.0.0.1:3000/auth/logout', { method: 'GET', credentials: 'include' }); } catch (err) { console.error('Erro no logout:', err); }
     localStorage.clear();
     alert('Adeus! E até logo. ;)');
-    window.location.href = '/../../index.html';
+    window.location.href = '/../index.html';
   };
 
   // Mostrar campos para exclusão de conta

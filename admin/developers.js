@@ -3,11 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // DOM Elements
   const developersContainer = document.getElementById('developers-container');
-  const developerForm = document.getElementById('developer-form');
-  const modal = document.getElementById('developer-modal');
-  const closeModal = document.querySelector('.close-modal');
+  const developerForm = document.getElementById('developer-form-inline');
   const cancelBtn = document.getElementById('cancel-developer-btn');
-  const addDeveloperBtn = document.getElementById('add-btn');
   const messageContainer = document.getElementById('message-container');
   // global search removed from UI; keep only id search
 // Escapa string para uso seguro no DOM
@@ -23,6 +20,10 @@ function escapeHtml(unsafe) {
 
  
   const developerSearchInput = document.getElementById('developer-search');
+  const searchIdInput = document.getElementById('search-id');
+  const btnSearchId = document.getElementById('btn-search-id');
+  const editBtn = document.getElementById('edit-developer-btn');
+  const saveBtn = document.getElementById('save-developer-btn');
 
   let developers = [];
   let editingDeveloperId = null;
@@ -31,10 +32,21 @@ function escapeHtml(unsafe) {
   // Inicialização
   await loadDevelopers();
 
+  // bloquear campos inicialmente
+  setFormDisabled(true);
+
+  // esconder painel esquerdo até o usuário buscar por ID
+  const splitLeft = document.querySelector('.split-left');
+  function collapseLeftPanel() { if (splitLeft) splitLeft.classList.add('collapsed-left'); }
+  function expandLeftPanel() { if (splitLeft) splitLeft.classList.remove('collapsed-left'); }
+  collapseLeftPanel();
+
   // Event Listeners (UI simplified: no add/global search)
-  closeModal.addEventListener('click', () => hideModal());
-  cancelBtn && cancelBtn.addEventListener('click', () => hideModal());
-  developerForm.addEventListener('submit', handleFormSubmit);
+  cancelBtn && cancelBtn.addEventListener('click', () => onCancel());
+  developerForm && developerForm.addEventListener('submit', handleFormSubmit);
+  btnSearchId && btnSearchId.addEventListener('click', buscarPorId);
+  editBtn && editBtn.addEventListener('click', () => enableEditing());
+  saveBtn && saveBtn.addEventListener('click', () => developerForm.requestSubmit());
   const deleteDeveloperBtn = document.getElementById('delete-developer-btn');
   deleteDeveloperBtn && deleteDeveloperBtn.addEventListener('click', async () => {
     const id = document.getElementById('developer-id').value;
@@ -46,7 +58,7 @@ function escapeHtml(unsafe) {
         const txt = await res.text(); throw new Error(txt || 'Erro ao excluir');
       }
       showMessage('Desenvolvedor excluído!', 'success');
-      hideModal();
+      onAfterDelete();
       await loadDevelopers();
     } catch (err) {
       console.error(err);
@@ -54,9 +66,6 @@ function escapeHtml(unsafe) {
     }
   });
   developerSearchInput && developerSearchInput.addEventListener('input', filterDevelopers);
-  const btnSearchId = document.getElementById('btn-search-id');
-  const searchIdInput = document.getElementById('search-id');
-  if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
 
   // Carregar desenvolvedores
   async function loadDevelopers() {
@@ -94,7 +103,7 @@ function escapeHtml(unsafe) {
 
   // Modal
   function showDeveloperForm(developerId = null) {
-    const modalTitle = document.getElementById('modal-title');
+    const panelTitle = document.getElementById('panel-title');
     developerForm.reset();
     editingDeveloperId = null;
     document.getElementById('developer-id').value = '';
@@ -103,19 +112,46 @@ function escapeHtml(unsafe) {
       if (dev) {
         document.getElementById('developer-id').value = dev.id;
         document.getElementById('developer-name').value = dev.name;
-        modalTitle.textContent = 'Editar Desenvolvedor';
+        panelTitle.textContent = 'Editar Desenvolvedor';
         editingDeveloperId = dev.id;
         if (deleteDeveloperBtn) deleteDeveloperBtn.style.display = 'inline-block';
+        if (editBtn) editBtn.style.display = 'inline-block';
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        if (saveBtn) saveBtn.style.display = 'none';
+        setFormDisabled(true);
       }
     } else {
-      modalTitle.textContent = 'Adicionar Novo Desenvolvedor';
+      panelTitle.textContent = 'Adicionar Novo Desenvolvedor';
       if (deleteDeveloperBtn) deleteDeveloperBtn.style.display = 'none';
+      if (editBtn) editBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+      if (saveBtn) saveBtn.style.display = 'inline-block';
+      setFormDisabled(false);
     }
-    modal.style.display = 'block';
+  // mostrar o painel esquerdo quando o formulário é aberto
+  expandLeftPanel();
   }
 
-  function hideModal() {
-    modal.style.display = 'none';
+  function hideForm() {
+    const panelTitle = document.getElementById('panel-title');
+    // Preserve search and id values so the user doesn't lose the searched id
+    const searchInput = document.getElementById('search-id');
+    const searchVal = searchInput ? searchInput.value : '';
+    const hiddenId = document.getElementById('developer-id');
+    const hiddenVal = hiddenId ? hiddenId.value : '';
+    developerForm.reset();
+    // restore preserved values
+    if (searchInput) searchInput.value = searchVal;
+    if (hiddenId) hiddenId.value = hiddenVal;
+    editingDeveloperId = null;
+    if (deleteDeveloperBtn) deleteDeveloperBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (panelTitle) panelTitle.textContent = 'Desenvolvedor';
+    setFormDisabled(true);
+    // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
+    collapseLeftPanel();
   }
 
   // Formulário
@@ -129,7 +165,7 @@ function escapeHtml(unsafe) {
     }
     const devData = { name };
     try {
-      if (developerId) {
+  if (developerId) {
         // confirmar via GET antes de PUT
         const check = await fetch(`${API_BASE_URL}/developers/${developerId}`);
         if (check.ok) {
@@ -174,8 +210,8 @@ function escapeHtml(unsafe) {
           body: JSON.stringify(devData)
         });
         showMessage('Desenvolvedor criado com sucesso!', 'success');
-      }
-      hideModal();
+    }
+  hideForm();
       searchedId = null;
       await loadDevelopers();
     } catch (error) {
@@ -214,13 +250,13 @@ function escapeHtml(unsafe) {
         const dev = await r.json();
         // abre modal de edição para este desenvolvedor
         showDeveloperForm(dev.id);
-        showMessage('Desenvolvedor encontrado! Abra o formulário para editar.', 'success');
+        showMessage('Desenvolvedor encontrado! Clique em Alterar para editar ou Excluir para remover.', 'success');
       } else if (r.status === 404) {
         developersContainer.innerHTML = '';
         showDeveloperForm();
         document.getElementById('developer-id').value = id;
         searchedId = parseInt(id, 10);
-        showMessage('Desenvolvedor não encontrado. Pode incluir com este ID.', 'info');
+        showMessage('Desenvolvedor não encontrado. Preencha o formulário e clique em Salvar para criar.', 'info');
       } else {
         throw new Error('Erro na busca');
       }
@@ -228,6 +264,29 @@ function escapeHtml(unsafe) {
       console.error(err);
       showMessage('Erro ao buscar desenvolvedor', 'error');
     }
+  }
+
+  function setFormDisabled(disabled) {
+    const fields = ['developer-name'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = disabled;
+    });
+  }
+
+  function enableEditing() {
+    setFormDisabled(false);
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
+  function onCancel() {
+    hideForm();
+  }
+
+  function onAfterDelete() {
+    hideForm();
+    searchedId = null;
   }
 
   // Mensagens

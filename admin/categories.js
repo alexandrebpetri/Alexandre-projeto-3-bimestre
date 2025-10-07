@@ -3,14 +3,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // DOM Elements
   const categoriesContainer = document.getElementById('categories-container');
-  const categoryForm = document.getElementById('category-form');
-  const modal = document.getElementById('category-modal');
-  const closeModal = document.querySelector('.close-modal');
+  const categoryForm = document.getElementById('category-form-inline');
   const cancelBtn = document.getElementById('cancel-category-btn');
-  const addCategoryBtn = document.getElementById('add-btn');
   const messageContainer = document.getElementById('message-container');
   // campo de busca global removido da UI; mantemos apenas busca por ID
   const categorySearchInput = document.getElementById('category-search');
+  const searchIdInput = document.getElementById('search-id');
+  const btnSearchId = document.getElementById('btn-search-id');
+  const editBtn = document.getElementById('edit-category-btn');
+  const saveBtn = document.getElementById('save-category-btn');
 
   let categories = [];
   let editingCategoryId = null;
@@ -19,12 +20,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização
   await loadCategories();
 
+  setFormDisabled(true);
+
+  // esconder painel esquerdo até o usuário buscar por ID
+  const splitLeft = document.querySelector('.split-left');
+  function collapseLeftPanel() { if (splitLeft) splitLeft.classList.add('collapsed-left'); }
+  function expandLeftPanel() { if (splitLeft) splitLeft.classList.remove('collapsed-left'); }
+  collapseLeftPanel();
+
   // Event Listeners — botão 'Adicionar' e buscas globais foram removidos da interface
-  const btnSearchId = document.getElementById('btn-search-id');
-  const searchIdInput = document.getElementById('search-id');
   if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
-  closeModal.addEventListener('click', () => hideModal());
-  cancelBtn && cancelBtn.addEventListener('click', () => hideModal());
+  cancelBtn && cancelBtn.addEventListener('click', () => onCancel());
+  editBtn && editBtn.addEventListener('click', () => enableEditing());
+  saveBtn && saveBtn.addEventListener('click', () => categoryForm.requestSubmit());
   const deleteCategoryBtn = document.getElementById('delete-category-btn');
   deleteCategoryBtn && deleteCategoryBtn.addEventListener('click', async () => {
     const id = document.getElementById('category-id').value;
@@ -37,14 +45,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error(txt || 'Erro ao excluir');
       }
       showMessage('Categoria excluída!', 'success');
-      hideModal();
+      onAfterDelete();
       await loadCategories();
     } catch (err) {
       console.error(err);
       showMessage('Falha ao excluir categoria.', 'error');
     }
   });
-  categoryForm.addEventListener('submit', handleFormSubmit);
+  categoryForm && categoryForm.addEventListener('submit', handleFormSubmit);
 
   // Carregar categorias
   async function loadCategories() {
@@ -83,9 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCategories(filtered);
   }
 
-  // Modal
+  // Form inline
   function showCategoryForm(categoryId = null) {
-    const modalTitle = document.getElementById('modal-title');
+    const panelTitle = document.getElementById('panel-title');
     categoryForm.reset();
     editingCategoryId = null;
     document.getElementById('category-id').value = '';
@@ -95,19 +103,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (cat) {
         document.getElementById('category-id').value = cat.id;
         document.getElementById('category-name').value = cat.name;
-        modalTitle.textContent = 'Editar Categoria';
+        panelTitle.textContent = 'Editar Categoria';
         editingCategoryId = cat.id;
         if (deleteCategoryBtn) deleteCategoryBtn.style.display = 'inline-block';
+        if (editBtn) editBtn.style.display = 'inline-block';
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        if (saveBtn) saveBtn.style.display = 'none';
+        setFormDisabled(true);
       }
     } else {
-      modalTitle.textContent = 'Adicionar Nova Categoria';
+      panelTitle.textContent = 'Adicionar Nova Categoria';
       if (deleteCategoryBtn) deleteCategoryBtn.style.display = 'none';
+      if (editBtn) editBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+      if (saveBtn) saveBtn.style.display = 'inline-block';
+      setFormDisabled(false);
     }
-    modal.style.display = 'block';
+  // mostrar o painel esquerdo quando o formulário é aberto
+  expandLeftPanel();
   }
 
-  function hideModal() {
-    modal.style.display = 'none';
+  function hideForm() {
+    const panelTitle = document.getElementById('panel-title');
+    // preserve search and id values
+    const searchInput = document.getElementById('search-id');
+    const searchVal = searchInput ? searchInput.value : '';
+    const hiddenId = document.getElementById('category-id');
+    const hiddenVal = hiddenId ? hiddenId.value : '';
+    categoryForm.reset();
+    if (searchInput) searchInput.value = searchVal;
+    if (hiddenId) hiddenId.value = hiddenVal;
+    editingCategoryId = null;
+    const deleteCategoryBtn = document.getElementById('delete-category-btn');
+    if (deleteCategoryBtn) deleteCategoryBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (panelTitle) panelTitle.textContent = 'Categoria';
+    setFormDisabled(true);
+    // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
+    collapseLeftPanel();
   }
 
   // Formulário
@@ -168,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         showMessage('Categoria criada com sucesso!', 'success');
       }
-      hideModal();
+  hideForm();
       searchedId = null;
       await loadCategories();
     } catch (error) {
@@ -215,14 +250,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cat = await r.json();
             // abre modal de edição com o item encontrado
             showCategoryForm(cat.id);
-            showMessage('Categoria encontrada! Abra o formulário para editar.', 'success');
+            showMessage('Categoria encontrada! Clique em Alterar para editar ou Excluir para remover.', 'success');
           } else if (r.status === 404) {
           // abrir modal para criar com ID
           categoriesContainer.innerHTML = '';
           showCategoryForm();
           document.getElementById('category-id').value = id;
           searchedId = parseInt(id, 10);
-          showMessage('Categoria não encontrada. Pode incluir com este ID.', 'info');
+          showMessage('Categoria não encontrada. Preencha o formulário e clique em Salvar para criar.', 'info');
       } else {
         throw new Error('Erro na busca');
       }
@@ -230,6 +265,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error(err);
       showMessage('Erro ao buscar categoria', 'error');
     }
+  }
+
+  function setFormDisabled(disabled) {
+    const fields = ['category-name'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = disabled;
+    });
+  }
+
+  function enableEditing() {
+    setFormDisabled(false);
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
+  function onCancel() {
+    hideForm();
+  }
+
+  function onAfterDelete() {
+    hideForm();
+    searchedId = null;
   }
 
   // Mensagens

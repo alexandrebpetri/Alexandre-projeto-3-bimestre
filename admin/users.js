@@ -7,14 +7,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const messageContainer = document.getElementById('message-container');
   const userSearchInput = document.getElementById('user-search');
 
-  // Modal elements
-  const modal = document.getElementById('status-modal');
-  const closeModal = document.querySelector('#status-modal .close-modal');
+  // Inline form elements
   const cancelBtn = document.getElementById('cancel-status-btn');
-  const statusForm = document.getElementById('status-form');
+  const statusForm = document.getElementById('status-form-inline');
   const statusSelect = document.getElementById('status-select');
   const userIdInput = document.getElementById('user-id');
   const userIdent = document.getElementById('user-ident');
+  const userIdSearchInput = document.getElementById('user-id-search');
+  const userIdSearchBtn = document.getElementById('user-id-search-btn');
+  const saveBtn = document.getElementById('save-status-btn');
 
   let users = [];
   let statuses = [];
@@ -22,14 +23,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicializa
   await Promise.all([loadStatuses(), loadUsers()]);
 
+  setFormDisabled(true);
+
+  // esconder painel esquerdo até o usuário buscar por ID
+  const splitLeft = document.querySelector('.split-left');
+  function collapseLeftPanel() { if (splitLeft) splitLeft.classList.add('collapsed-left'); }
+  function expandLeftPanel() { if (splitLeft) splitLeft.classList.remove('collapsed-left'); }
+  collapseLeftPanel();
+
   // Eventos
   userSearchInput && userSearchInput.addEventListener('input', filterUsers);
-  const userIdSearchInput = document.getElementById('user-id-search');
-  const userIdSearchBtn = document.getElementById('user-id-search-btn');
   userIdSearchBtn && userIdSearchBtn.addEventListener('click', buscarPorId);
-  closeModal.addEventListener('click', hideModal);
-  cancelBtn && cancelBtn.addEventListener('click', hideModal);
-  statusForm.addEventListener('submit', handleStatusSubmit);
+  cancelBtn && cancelBtn.addEventListener('click', onCancel);
+  statusForm && statusForm.addEventListener('submit', handleStatusSubmit);
+  saveBtn && saveBtn.addEventListener('click', () => statusForm.requestSubmit());
   // (opção de excluir removida do CRUD de usuários)
 
   // Carrega status disponíveis
@@ -131,7 +138,7 @@ async function loadStatuses() {
   }
 
   // Modal
-  function openEditModal(id) {
+  function openEditPanel(id) {
     const u = users.find(x => x.id === id);
     if (!u) {
       showMessage('Usuário não encontrado.', 'error');
@@ -150,7 +157,12 @@ async function loadStatuses() {
     if (option) option.selected = true;
     else if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
 
-    modal.style.display = 'block';
+  // mostrar o painel esquerdo quando o formulário é aberto
+  expandLeftPanel();
+    // show buttons
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    if (saveBtn) saveBtn.style.display = 'none';
+    setFormDisabled(true);
   }
 
   // Busca por ID chamando backend. Se encontrar: abre modal para editar status.
@@ -164,21 +176,24 @@ async function loadStatuses() {
       const res = await fetch(`${API_BASE_URL}/users/${id}`);
       if (res.status === 200) {
         const u = await res.json();
-        // abre modal para edição de status
+  // abre painel para edição de status
         if (u.id === 1) return showMessage('O Admin_Supremo não pode ter o status alterado.', 'error');
         userIdInput.value = u.id;
         userIdent.textContent = `#${u.id} — ${u.email} (${u.nickname})`;
         const option = Array.from(statusSelect.options).find(opt => Number(opt.value) === Number(u.user_status));
         if (option) option.selected = true;
         else if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
-        modal.style.display = 'block';
+  // show Edit/Delete options
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  if (saveBtn) saveBtn.style.display = 'none';
+  setFormDisabled(true);
+  expandLeftPanel();
         return;
       }
 
       if (res.status === 404) {
-        // não encontrado: abrir formulário de criação simples
-        // vamos aproveitar o modal e apresentar campos mínimos para criar
-        openCreateModalWithId(id);
+        // não encontrado: preparar o painel para criação com id
+        openCreatePanelWithId(id);
         return;
       }
 
@@ -190,17 +205,18 @@ async function loadStatuses() {
     }
   }
 
-  function openCreateModalWithId(id) {
-    // substitui temporariamente o conteúdo do modal para criar usuário com id informado
-    // cria inputs dinâmicos
+  function openCreatePanelWithId(id) {
     userIdInput.value = id;
     userIdent.textContent = `Criar usuário com ID #${id}`;
-    // assegurar que o select de status existe
     if (statusSelect.options.length > 0) statusSelect.selectedIndex = 0;
-    // troca o handler do submit para criar usuário quando modal estiver em modo create
+    // troca handler para criar a partir do painel
     statusForm.removeEventListener('submit', handleStatusSubmit);
     statusForm.addEventListener('submit', handleCreateFromModal);
-    modal.style.display = 'block';
+    // show Save/Cancel
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    setFormDisabled(false);
+    expandLeftPanel();
   }
 
   async function handleCreateFromModal(e) {
@@ -238,11 +254,28 @@ async function loadStatuses() {
     }
   }
 
-  function hideModal() {
-    modal.style.display = 'none';
+  function hideForm() {
+    // preserve search and id values
+    const searchInput = document.getElementById('user-id-search');
+    const searchVal = searchInput ? searchInput.value : '';
+    const hiddenVal = userIdInput ? userIdInput.value : '';
     statusForm.reset();
-    userIdInput.value = '';
+    if (searchInput) searchInput.value = searchVal;
+    if (userIdInput) userIdInput.value = hiddenVal;
     userIdent.textContent = '';
+    // restaura handler caso estivesse em modo create
+    statusForm.removeEventListener('submit', handleCreateFromModal);
+    statusForm.addEventListener('submit', handleStatusSubmit);
+    // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
+    collapseLeftPanel();
+  }
+
+  function setFormDisabled(disabled) {
+    if (statusSelect) statusSelect.disabled = disabled;
+  }
+
+  function onCancel() {
+    hideForm();
   }
 
   // Submit alteração de status

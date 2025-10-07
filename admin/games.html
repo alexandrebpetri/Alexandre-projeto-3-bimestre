@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Jogos | Jurassic Hub</title>
+  <link rel="stylesheet" href="cat-dev.css">
   <link rel="stylesheet" href="games.css">
   <link rel="shortcut icon" href="/./assets/favicon.ico" type="image/x-icon">
 </head>
@@ -19,80 +20,85 @@
 
   <main class="admin-main-content">
     <div class="admin-toolbar">
-      <div class="id-search-box">
-        <label for="search-id">Buscar por ID:</label>
-        <input type="number" id="search-id" placeholder="Digite o ID">
-        <button id="btn-search-id" class="primary-button">🔍 Buscar</button>
-      </div>
+      <!-- search moved to left panel -->
     </div>
 
     <div class="message-container" id="message-container"></div>
 
-    <!-- Modal de Edição/Criação -->
-    <div class="modal" id="game-modal">
-      <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h2 id="modal-title">Adicionar Novo Jogo</h2>
-        <form id="game-form">
-          <input type="hidden" id="game-id">
-          <div class="form-group">
-            <label for="game-name">Nome do Jogo</label>
-            <input type="text" id="game-name" required>
-          </div>
-          <div class="form-row">
+    <div class="split-layout">
+      <div class="split-left">
+        <div class="panel">
+          <h2 id="panel-title">Jogo</h2>
+          <form id="game-form-inline">
+            <div class="form-group id-search-row">
+              <label for="search-id">Buscar por ID:</label>
+              <input type="number" id="search-id" placeholder="ID">
+              <button type="button" id="btn-search-id" class="primary-button"><img src="/../assets/search-icon.png" alt="Buscar"></button>
+            </div>
+            <div class="id-search-actions">
+              <button type="button" class="secondary-button" id="delete-game-btn" style="display:none;background:#8b0000;color:#fff;border-color:#8b0000;">Excluir</button>
+              <button type="button" class="secondary-button" id="edit-game-btn" style="display:none;">Alterar</button>
+              <button type="button" class="secondary-button" id="cancel-game-btn" style="display:none;">Cancelar</button>
+            </div>
+            <input type="hidden" id="game-id">
             <div class="form-group">
-              <label for="game-price">Preço (R$)</label>
-              <input type="number" id="game-price" step="0.01" min="0">
+              <label for="game-name">Nome do Jogo</label>
+              <input type="text" id="game-name" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="game-price">Preço (R$)</label>
+                <input type="number" id="game-price" step="0.01" min="0">
+              </div>
+              <div class="form-group">
+                <label for="game-release-date">Data de Lançamento</label>
+                <input type="date" id="game-release-date">
+              </div>
             </div>
             <div class="form-group">
-              <label for="game-release-date">Data de Lançamento</label>
-              <input type="date" id="game-release-date">
+              <label for="game-developer">Desenvolvedor</label>
+              <select id="game-developer"><option value="">Selecione...</option></select>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="game-developer">Desenvolvedor</label>
-            <select id="game-developer"><option value="">Selecione...</option></select>
-          </div>
-          <div class="form-group">
-            <label>Categorias</label>
-            <div class="categories-checkbox" id="categories-container"></div>
-          </div>
-          <div class="form-group">
-            <label for="game-description">Descrição</label>
-            <textarea id="game-description" rows="4"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="game-image">Imagem do Jogo</label>
-            <input type="file" id="game-image" accept="image/*">
-            <div class="image-preview-container">
-              <img id="image-preview" class="image-preview">
-              <button type="button" id="remove-image-btn" class="secondary-button small-button">Remover Imagem</button>
+            <div class="form-group">
+              <label>Categorias</label>
+              <div class="categories-checkbox" id="categories-container"></div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="secondary-button" id="delete-game-btn" style="display:none;background:#8b0000;color:#fff;border-color:#8b0000;margin-right:8px;">Excluir</button>
-            <button type="button" class="secondary-button" id="cancel-game-btn">Cancelar</button>
-            <button type="submit" class="primary-button">Salvar Jogo</button>
-          </div>
-        </form>
+            <div class="form-group">
+              <label for="game-description">Descrição</label>
+              <textarea id="game-description" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="game-image">Imagem do Jogo</label>
+              <input type="file" id="game-image" accept="image/*">
+              <div class="image-preview-container">
+                <img id="image-preview" class="image-preview">
+                <button type="button" id="remove-image-btn" class="secondary-button small-button">Remover Imagem</button>
+              </div>
+            </div>
+              <div class="form-actions">
+                <button type="submit" class="primary-button" id="save-game-btn" style="display:none;">Salvar Jogo</button>
+              </div>
+          </form>
+        </div>
       </div>
-    </div>
-
-    <!-- Lista de Jogos em tabela -->
-    <div class="table-wrapper">
-      <table class="data-table" id="games-table">
-        <thead>
-          <tr>
-            <th style="width:80px">ID</th>
-            <th>Nome</th>
-            <th style="width:100px">Preço</th>
-            <th style="width:140px">Desenvolvedor</th>
-            <th>Categorias</th>
-            <!-- coluna 'Ações' removida -->
-          </tr>
-        </thead>
-        <tbody id="games-container"></tbody>
-      </table>
+      <div class="split-right">
+        <!-- Lista de Jogos em tabela -->
+        <div class="table-wrapper">
+          <table class="data-table" id="games-table">
+            <thead>
+              <tr>
+                <th style="width:80px">ID</th>
+                <th>Nome</th>
+                <th style="width:100px">Preço</th>
+                <th style="width:140px">Desenvolvedor</th>
+                <th>Categorias</th>
+                <!-- coluna 'Ações' removida -->
+              </tr>
+            </thead>
+            <tbody id="games-container"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </main>
   <script type="module" src="games.js"></script>

@@ -30,7 +30,9 @@ function searchGames(text) {
 }
 
 export function seeGame(id) {
-  window.location.href = `frontend/details.html?id=${id}`;
+  // Navigate relatively so pages inside the `frontend/` folder (like Cart.html)
+  // go to details.html in the same folder instead of 'frontend/frontend/...'
+  window.location.href = `details.html?id=${id}`;
 }
 
 window.seeGame = seeGame;
@@ -128,8 +130,8 @@ function showNoUserLogged() {
   `;
   userCard.appendChild(noUserDiv);
 
-  document.getElementById('login-btn').onclick = () => window.location.href = 'frontend/login.html';
-  document.getElementById('signin-btn').onclick = () => window.location.href = 'frontend/register.html';
+  document.getElementById('login-btn').onclick = () => window.location.href = 'login.html';
+  document.getElementById('signin-btn').onclick = () => window.location.href = 'register.html';
 }
 
 // Fechar o card

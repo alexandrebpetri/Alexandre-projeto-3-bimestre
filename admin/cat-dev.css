@@ -150,10 +150,27 @@ body {
 }
 
 .admin-main-content {
-  max-width: 700px;
-  margin: 32px auto 0 auto;
-  padding: 0 16px,;
+  max-width: 1200px;
+  margin: 24px auto 0 auto;
+  padding: 0 20px;
   padding-bottom: 2rem;
+}
+
+/* Layout dividido: formulário à esquerda, tabela à direita */
+.split-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.split-left {
+  width: 340px; /* largura do formulário */
+  min-width: 280px;
+}
+.split-right {
+  flex: 1; /* tabela ocupa o restante */
+}
+.modal-content {
+  max-width: none; /* permitir formulário maior se preciso */
 }
 
 .admin-toolbar {
@@ -188,6 +205,43 @@ body {
   font-size: 1rem;
   width:15rem;
   height: 2rem;
+}
+
+/* ID search row in split-left forms */
+.id-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.id-search-row label {
+  min-width: 90px;
+  color: #bdb76b;
+}
+.id-search-row input[type="number"] {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #bdb76b;
+  background: #181818;
+  color: #fff;
+}
+.id-search-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.6rem; /* appear below the search input */
+  flex-wrap: wrap;
+}
+
+/* Quando a coluna esquerda estiver colapsada, manter apenas o campo de buscar visível
+   (útil para o fluxo: usuário vê o input de ID, mas o restante do formulário fica escondido)
+*/
+.split-left.collapsed-left .panel form > :not(.id-search-row) {
+  display: none !important;
+}
+.id-search-actions .primary-button,
+.id-search-actions .secondary-button {
+  margin: 0; /* remove extra margins to keep them inline */
 }
 
 /* ===== LISTA DE DESENVOLVEDORES ===== */

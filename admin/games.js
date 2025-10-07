@@ -3,9 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // DOM Elements
   const gamesContainer = document.getElementById('games-container');
-  const gameForm = document.getElementById('game-form');
-  const modal = document.getElementById('game-modal');
-  const closeModal = document.querySelector('.close-modal');
+  const gameForm = document.getElementById('game-form-inline');
   const cancelBtn = document.getElementById('cancel-game-btn');
   const addGameBtn = document.getElementById('add-btn');
   const messageContainer = document.getElementById('message-container');
@@ -13,6 +11,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const removeImageBtn = document.getElementById('remove-image-btn');
   const gameImageInput = document.getElementById('game-image');
   const gameSearchInput = document.getElementById('game-search');
+  const searchIdInput = document.getElementById('search-id');
+  const btnSearchId = document.getElementById('btn-search-id');
+  const editBtn = document.getElementById('edit-game-btn');
+  const saveBtn = document.getElementById('save-game-btn');
   const categoryFilter = document.getElementById('category-filter');
   const developerFilter = document.getElementById('developer-filter');
   const developerSelect = document.getElementById('game-developer');
@@ -31,19 +33,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadCategories();
   await loadGames();
 
+  setFormDisabled(true);
+
+  // esconder painel esquerdo até o usuário buscar por ID
+  const splitLeft = document.querySelector('.split-left');
+  function collapseLeftPanel() { if (splitLeft) splitLeft.classList.add('collapsed-left'); }
+  function expandLeftPanel() { if (splitLeft) splitLeft.classList.remove('collapsed-left'); }
+  collapseLeftPanel();
+
   // Event Listeners (aplica apenas se os elementos existem)
   addGameBtn && addGameBtn.addEventListener('click', () => showGameForm());
-  closeModal && closeModal.addEventListener('click', () => hideModal());
-  cancelBtn && cancelBtn.addEventListener('click', () => hideModal());
+  cancelBtn && cancelBtn.addEventListener('click', () => onCancel());
   gameForm && gameForm.addEventListener('submit', handleFormSubmit);
   gameImageInput && gameImageInput.addEventListener('change', handleImageUpload);
   removeImageBtn && removeImageBtn.addEventListener('click', removeImage);
   gameSearchInput && gameSearchInput.addEventListener('input', filterGames);
   categoryFilter && categoryFilter.addEventListener('change', filterGames);
   developerFilter && developerFilter.addEventListener('change', filterGames);
-  const btnSearchId = document.getElementById('btn-search-id');
-  const searchIdInput = document.getElementById('search-id');
   if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
+  editBtn && editBtn.addEventListener('click', () => enableEditing());
+  saveBtn && saveBtn.addEventListener('click', () => gameForm.requestSubmit());
   // Botão de exclusão dentro do modal
   const deleteGameBtn = document.getElementById('delete-game-btn');
   if (deleteGameBtn) {
@@ -174,17 +183,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Modal
   function showGameForm(gameId = null) {
-    const modalTitle = document.getElementById('modal-title');
+    const panelTitle = document.getElementById('panel-title');
     gameForm.reset();
-    imagePreview.style.display = 'none';
-    removeImageBtn.style.display = 'none';
+    imagePreview && (imagePreview.style.display = 'none');
+    removeImageBtn && (removeImageBtn.style.display = 'none');
     currentImageBase64 = null;
     editingGameId = null;
     // Desmarca categorias
     document.querySelectorAll('#categories-container input[type="checkbox"]').forEach(cb => cb.checked = false);
 
     if (gameId) {
-      modalTitle.textContent = 'Editar Jogo';
+      panelTitle.textContent = 'Editar Jogo';
       const game = games.find(g => g.id === gameId);
       if (game) {
         editingGameId = game.id;
@@ -218,18 +227,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const deleteGameBtn = document.getElementById('delete-game-btn');
         if (deleteGameBtn) deleteGameBtn.style.display = 'inline-block';
+        if (editBtn) editBtn.style.display = 'inline-block';
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        if (saveBtn) saveBtn.style.display = 'none';
+        setFormDisabled(true);
       }
     } else {
-      modalTitle.textContent = 'Adicionar Novo Jogo';
+      panelTitle.textContent = 'Adicionar Novo Jogo';
       currentImageId = null;
       const deleteGameBtn = document.getElementById('delete-game-btn');
       if (deleteGameBtn) deleteGameBtn.style.display = 'none';
+      if (editBtn) editBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+      if (saveBtn) saveBtn.style.display = 'inline-block';
+      setFormDisabled(false);
     }
-    modal.style.display = 'block';
+  // mostrar o painel esquerdo quando o formulário é aberto
+  expandLeftPanel();
   }
 
-  function hideModal() {
-    modal.style.display = 'none';
+  function hideForm() {
+    const panelTitle = document.getElementById('panel-title');
+    // preserve search and id values
+    const searchInput = document.getElementById('search-id');
+    const searchVal = searchInput ? searchInput.value : '';
+    const hiddenId = document.getElementById('game-id');
+    const hiddenVal = hiddenId ? hiddenId.value : '';
+    gameForm.reset();
+    if (searchInput) searchInput.value = searchVal;
+    if (hiddenId) hiddenId.value = hiddenVal;
+    if (imagePreview) { imagePreview.src = ''; imagePreview.style.display = 'none'; }
+    if (removeImageBtn) removeImageBtn.style.display = 'none';
+    document.querySelectorAll('#categories-container input[type="checkbox"]').forEach(cb => cb.checked = false);
+    editingGameId = null;
+    currentImageBase64 = null;
+    currentImageId = null;
+    if (panelTitle) panelTitle.textContent = 'Jogo';
+    // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
+    collapseLeftPanel();
+  }
+
+  function setFormDisabled(disabled) {
+    const fields = ['game-name','game-price','game-release-date','game-developer','game-description','game-image'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = disabled;
+    });
+    // checkboxes
+    document.querySelectorAll('#categories-container input[type="checkbox"]').forEach(cb => cb.disabled = disabled);
+  }
+
+  function enableEditing() {
+    setFormDisabled(false);
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
+  function onCancel() {
+    hideForm();
+  }
+
+  function onAfterDelete() {
+    hideForm();
+    searchedId = null;
   }
 
   // Função para enviar imagem separadamente após criar/editar o jogo
