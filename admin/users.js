@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userIdSearchInput = document.getElementById('user-id-search');
   const userIdSearchBtn = document.getElementById('user-id-search-btn');
   const saveBtn = document.getElementById('save-status-btn');
+  const editBtn = document.getElementById('edit-status-btn');
 
   let users = [];
   let statuses = [];
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   cancelBtn && cancelBtn.addEventListener('click', onCancel);
   statusForm && statusForm.addEventListener('submit', handleStatusSubmit);
   saveBtn && saveBtn.addEventListener('click', () => statusForm.requestSubmit());
+  editBtn && editBtn.addEventListener('click', () => enableEditing());
   // (opção de excluir removida do CRUD de usuários)
 
   // Carrega status disponíveis
@@ -162,6 +164,7 @@ async function loadStatuses() {
     // show buttons
     if (cancelBtn) cancelBtn.style.display = 'inline-block';
     if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'inline-block';
     setFormDisabled(true);
   }
 
@@ -186,14 +189,21 @@ async function loadStatuses() {
   // show Edit/Delete options
   if (cancelBtn) cancelBtn.style.display = 'inline-block';
   if (saveBtn) saveBtn.style.display = 'none';
+  if (editBtn) editBtn.style.display = 'inline-block';
   setFormDisabled(true);
   expandLeftPanel();
+        // preserve and lock the search input to prevent accidental changes
+        if (userIdSearchInput) userIdSearchInput.disabled = true;
+        if (userIdSearchBtn) userIdSearchBtn.disabled = true;
         return;
       }
 
       if (res.status === 404) {
         // não encontrado: preparar o painel para criação com id
         openCreatePanelWithId(id);
+        // lock the search input as well when creating from search
+        if (userIdSearchInput) userIdSearchInput.disabled = true;
+        if (userIdSearchBtn) userIdSearchBtn.disabled = true;
         return;
       }
 
@@ -212,9 +222,10 @@ async function loadStatuses() {
     // troca handler para criar a partir do painel
     statusForm.removeEventListener('submit', handleStatusSubmit);
     statusForm.addEventListener('submit', handleCreateFromModal);
-    // show Save/Cancel
+    // show Save/Cancel (no edit option when creating)
     if (cancelBtn) cancelBtn.style.display = 'inline-block';
     if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'none';
     setFormDisabled(false);
     expandLeftPanel();
   }
@@ -244,9 +255,9 @@ async function loadStatuses() {
       }
       showMessage('Usuário criado com sucesso!', 'success');
       // restaura handler original
-      statusForm.removeEventListener('submit', handleCreateFromModal);
-      statusForm.addEventListener('submit', handleStatusSubmit);
-      hideModal();
+  statusForm.removeEventListener('submit', handleCreateFromModal);
+  statusForm.addEventListener('submit', handleStatusSubmit);
+  hideForm();
       await loadUsers();
     } catch (err) {
       console.error(err);
@@ -268,10 +279,23 @@ async function loadStatuses() {
     statusForm.addEventListener('submit', handleStatusSubmit);
     // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
     collapseLeftPanel();
+    // reset buttons
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    // re-enable search input/button so user can search a different ID
+    if (userIdSearchInput) userIdSearchInput.disabled = false;
+    if (userIdSearchBtn) userIdSearchBtn.disabled = false;
   }
 
   function setFormDisabled(disabled) {
     if (statusSelect) statusSelect.disabled = disabled;
+  }
+
+  function enableEditing() {
+    setFormDisabled(false);
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (editBtn) editBtn.style.display = 'none';
   }
 
   function onCancel() {
@@ -309,8 +333,8 @@ async function loadStatuses() {
         throw new Error(errText || 'Erro ao salvar status');
       }
 
-      showMessage('Status atualizado com sucesso!', 'success');
-      hideModal();
+  showMessage('Status atualizado com sucesso!', 'success');
+  hideForm();
       await loadUsers();
     } catch (err) {
       console.error(err);
@@ -320,6 +344,15 @@ async function loadStatuses() {
 
   // Mensagens
   function showMessage(text, type = 'success') {
+    // evita mensagens duplicadas idênticas empilhadas
+    try {
+      const existing = Array.from(messageContainer.children).find(ch => ch.textContent === text && ch.classList.contains(type === 'error' ? 'error' : 'success'));
+      if (existing) return; // já há uma mensagem igual visível
+    } catch (err) {
+      // se houver erro, cai para criação normal
+      console.error('Erro ao checar mensagens existentes:', err);
+    }
+
     const message = document.createElement('div');
     message.className = `message ${type === 'error' ? 'error' : 'success'}`;
     message.textContent = text;
@@ -327,9 +360,18 @@ async function loadStatuses() {
     setTimeout(() => message.remove(), 3500);
   }
 
-  // Fecha modal se clicar fora do conteúdo
+  // Fecha o painel esquerdo se clicar fora dele (quando estiver aberto)
   window.addEventListener('click', (ev) => {
-    if (ev.target === modal) hideModal();
+    try {
+      if (!splitLeft) return;
+      // se o painel estiver colapsado, não faz nada
+      if (splitLeft.classList.contains('collapsed-left')) return;
+      // se o clique aconteceu fora do painel esquerdo, fecha o formulário
+      if (!splitLeft.contains(ev.target)) hideForm();
+    } catch (err) {
+      // não bloquear se houver erro inesperado
+      console.error('Erro no listener global de clique:', err);
+    }
   });
 
 });

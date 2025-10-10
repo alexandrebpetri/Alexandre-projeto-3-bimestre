@@ -265,6 +265,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (panelTitle) panelTitle.textContent = 'Jogo';
     // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
     collapseLeftPanel();
+    // re-enable search input/button
+    if (searchIdInput) searchIdInput.disabled = false;
+    if (btnSearchId) btnSearchId.disabled = false;
   }
 
   function setFormDisabled(disabled) {
@@ -275,6 +278,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     // checkboxes
     document.querySelectorAll('#categories-container input[type="checkbox"]').forEach(cb => cb.disabled = disabled);
+    // manter o botão de remover imagem desabilitado enquanto o form estiver bloqueado
+    if (removeImageBtn) removeImageBtn.disabled = disabled;
   }
 
   function enableEditing() {
@@ -429,11 +434,16 @@ async function handleFormSubmit(e) {
         const game = await r.json();
         showGameForm(game.id);
         showMessage('Jogo encontrado!', 'success');
+        // preserve search value and lock input/button
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
       } else if (r.status === 404) {
         showGameForm();
         document.getElementById('game-id').value = id;
         searchedId = parseInt(id, 10);
         showMessage('Jogo não encontrado. Pode incluir com este ID.', 'info');
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
       } else {
         throw new Error('Erro na busca');
       }
@@ -454,14 +464,22 @@ async function handleFormSubmit(e) {
     reader.onload = function(event) {
       imagePreview.src = event.target.result;
       imagePreview.style.display = 'block';
-      removeImageBtn.style.display = 'block';
+      // mostra o botão de remover imagem, mas respeita o estado de disabled do formulário
+      if (removeImageBtn) {
+        removeImageBtn.style.display = 'block';
+        const formDisabled = document.getElementById('game-name')?.disabled;
+        removeImageBtn.disabled = !!formDisabled;
+      }
       currentImageBase64 = event.target.result;
     };
     reader.readAsDataURL(file);
   }
 
   async function removeImage() {
-    // Se a imagem j e1 existe no servidor, apaga-a tamb e9m no backend
+    // Se o controle estiver desabilitado, não faz nada
+    if (removeImageBtn && removeImageBtn.disabled) return;
+
+    // Se a imagem já existe no servidor, apaga-a também no backend
     try {
       if (editingGameId && currentImageId) {
         await fetch(`${API_BASE_URL}/images/${currentImageId}`, { method: 'DELETE' });
@@ -480,7 +498,7 @@ async function handleFormSubmit(e) {
     // Limpa preview localmente
     imagePreview.src = '';
     imagePreview.style.display = 'none';
-    removeImageBtn.style.display = 'none';
+    if (removeImageBtn) { removeImageBtn.style.display = 'none'; removeImageBtn.disabled = true; }
     gameImageInput.value = '';
     currentImageBase64 = null;
   }

@@ -87,3 +87,50 @@ CREATE TABLE library (
         ON DELETE CASCADE
         ON UPDATE NO ACTION
 );
+
+-- =====================================
+-- Correções/ajustes de sequences e constraints
+-- =====================================
+
+-- Garante sequência e default para category, developer e games
+DO $$
+BEGIN
+  -- CATEGORY
+  IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'category_id_seq') THEN
+    CREATE SEQUENCE category_id_seq START 1;
+  END IF;
+  ALTER TABLE category ALTER COLUMN id SET DEFAULT nextval('category_id_seq');
+  PERFORM setval('category_id_seq', (SELECT COALESCE(MAX(id),0) + 1 FROM category), false);
+
+  -- DEVELOPER
+  IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'developer_id_seq') THEN
+    CREATE SEQUENCE developer_id_seq START 1;
+  END IF;
+  ALTER TABLE developer ALTER COLUMN id SET DEFAULT nextval('developer_id_seq');
+  PERFORM setval('developer_id_seq', (SELECT COALESCE(MAX(id),0) + 1 FROM developer), false);
+
+  -- GAMES
+  IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'games_id_seq') THEN
+    CREATE SEQUENCE games_id_seq START 1;
+  END IF;
+  ALTER TABLE games ALTER COLUMN id SET DEFAULT nextval('games_id_seq');
+  PERFORM setval('games_id_seq', (SELECT COALESCE(MAX(id),0) + 1 FROM games), false);
+END $$;
+
+-- Cria constraint única em library(user_id, game_id) se ainda não existir
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        WHERE c.contype = 'u'
+          AND t.relname = 'library'
+          AND (SELECT array_to_string(array_agg(att.attname), ',')
+               FROM unnest(c.conkey) WITH ORDINALITY ck(attnum, ord)
+               JOIN pg_attribute att ON att.attnum = ck.attnum AND att.attrelid = t.oid
+              ) LIKE '%user_id%'
+    ) THEN
+        ALTER TABLE library
+        ADD CONSTRAINT library_user_game_unique UNIQUE (user_id, game_id);
+    END IF;
+END$$;

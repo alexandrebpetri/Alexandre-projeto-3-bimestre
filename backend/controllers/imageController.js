@@ -29,19 +29,33 @@ async function uploadImage(req, res) {
     // Verifica se o jogo existe
     const gameCheck = await pool.query('SELECT id FROM games WHERE id=$1', [gameId]);
     if (gameCheck.rowCount === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+    // Use uma transação + upsert para evitar race conditions que causam
+    // ERRO 23505 (duplicate key) se duas requisições tentarem inserir ao mesmo tempo.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-  const existing = await pool.query('SELECT * FROM image WHERE game_id=$1', [gameId]);
+      // Inserir ou atualizar (upsert) pelo unique constraint em game_id
+      const imgRes = await client.query(
+        `INSERT INTO image (data, game_id)
+         VALUES ($1, $2)
+         ON CONFLICT (game_id) DO UPDATE SET data = EXCLUDED.data
+         RETURNING id`,
+        [buffer, gameId]
+      );
 
-    let img;
-    if (existing.rows.length > 0) {
-      // atualiza imagem existente
-      img = await pool.query('UPDATE image SET data=$1 WHERE id=$2 RETURNING id', [buffer, existing.rows[0].id]);
-      // garante que games.image_id está sincronizado (opcional)
-      await pool.query('UPDATE games SET image_id=$1 WHERE id=$2', [existing.rows[0].id, gameId]);
-    } else {
-      // insere nova imagem e atualiza games.image_id
-      img = await pool.query('INSERT INTO image (data, game_id) VALUES ($1,$2) RETURNING id', [buffer, gameId]);
-      await pool.query('UPDATE games SET image_id=$1 WHERE id=$2', [img.rows[0].id, gameId]);
+      const imageId = imgRes.rows[0].id;
+
+      // garante que games.image_id está sincronizado
+      await client.query('UPDATE games SET image_id=$1 WHERE id=$2', [imageId, gameId]);
+
+      await client.query('COMMIT');
+      img = imgRes;
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
     }
 
     res.json({ success: true, imageId: img.rows[0].id });

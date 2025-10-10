@@ -34,10 +34,11 @@
           <form id="status-form-inline">
             <div class="form-group id-search-row">
               <label for="user-id-search">Buscar por ID:</label>
-              <input type="number" id="user-id-search" placeholder="Digite o ID">
-              <button type="button" id="user-id-search-btn" class="primary-button">🔍 Buscar</button>
+              <input type="number" id="user-id-search" placeholder="ID">
+              <button type="button" id="user-id-search-btn" class="primary-button"><img src="/../assets/search-icon.png" alt=""></button>
             </div>
             <div class="id-search-actions">
+              <button type="button" class="secondary-button" id="edit-status-btn" style="display:none;">Alterar</button>
               <button type="button" class="secondary-button" id="cancel-status-btn" style="display:none;">Cancelar</button>
             </div>
             <input type="hidden" id="user-id">
@@ -51,7 +52,7 @@
               </select>
             </div>
             <div class="form-actions">
-              <button type="submit" class="primary-button" id="save-status-btn" style="display:none;">Salvar Status</button>
+              <button type="button" class="primary-button" id="save-status-btn" style="display:none;">Salvar Status</button>
             </div>
           </form>
         </div>

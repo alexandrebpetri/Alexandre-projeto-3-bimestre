@@ -152,6 +152,9 @@ function escapeHtml(unsafe) {
     setFormDisabled(true);
     // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
     collapseLeftPanel();
+    // re-enable search input/button
+    if (searchIdInput) searchIdInput.disabled = false;
+    if (btnSearchId) btnSearchId.disabled = false;
   }
 
   // Formulário
@@ -251,12 +254,17 @@ function escapeHtml(unsafe) {
         // abre modal de edição para este desenvolvedor
         showDeveloperForm(dev.id);
         showMessage('Desenvolvedor encontrado! Clique em Alterar para editar ou Excluir para remover.', 'success');
+        // preserve search value and lock input/button
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
       } else if (r.status === 404) {
         developersContainer.innerHTML = '';
         showDeveloperForm();
         document.getElementById('developer-id').value = id;
         searchedId = parseInt(id, 10);
         showMessage('Desenvolvedor não encontrado. Preencha o formulário e clique em Salvar para criar.', 'info');
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
       } else {
         throw new Error('Erro na busca');
       }

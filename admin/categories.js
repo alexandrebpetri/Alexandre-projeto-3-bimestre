@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const categoryForm = document.getElementById('category-form-inline');
   const cancelBtn = document.getElementById('cancel-category-btn');
   const messageContainer = document.getElementById('message-container');
-  // campo de busca global removido da UI; mantemos apenas busca por ID
   const categorySearchInput = document.getElementById('category-search');
   const searchIdInput = document.getElementById('search-id');
   const btnSearchId = document.getElementById('btn-search-id');
@@ -15,11 +14,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let categories = [];
   let editingCategoryId = null;
-  let searchedId = null; // id usado no fluxo buscar/incluir
+  let searchedId = null;
 
   // Inicialização
   await loadCategories();
-
   setFormDisabled(true);
 
   // esconder painel esquerdo até o usuário buscar por ID
@@ -28,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function expandLeftPanel() { if (splitLeft) splitLeft.classList.remove('collapsed-left'); }
   collapseLeftPanel();
 
-  // Event Listeners — botão 'Adicionar' e buscas globais foram removidos da interface
+  // Event listeners
   if (btnSearchId) btnSearchId.addEventListener('click', buscarPorId);
   cancelBtn && cancelBtn.addEventListener('click', () => onCancel());
   editBtn && editBtn.addEventListener('click', () => enableEditing());
@@ -40,10 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Erro ao excluir');
-      }
+      if (!res.ok) { const txt = await res.text(); throw new Error(txt || 'Erro ao excluir'); }
       showMessage('Categoria excluída!', 'success');
       onAfterDelete();
       await loadCategories();
@@ -52,16 +47,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       showMessage('Falha ao excluir categoria.', 'error');
     }
   });
+
   categoryForm && categoryForm.addEventListener('submit', handleFormSubmit);
 
-  // Carregar categorias
   async function loadCategories() {
     const res = await fetch(`${API_BASE_URL}/categories`);
     categories = await res.json();
     renderCategories(categories);
   }
 
-  // Renderizar categorias em cards
   function renderCategories(catsToRender) {
     categoriesContainer.innerHTML = '';
     if (!Array.isArray(catsToRender) || catsToRender.length === 0) {
@@ -76,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
       categoriesContainer.appendChild(tr);
     });
-    // Ações removidas (não há botões na tabela)
   }
 
   function escapeHtml(text) {
@@ -84,14 +77,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // Filtro de busca
-  function filterCategories() {
-    const searchTerm = categorySearchInput.value.toLowerCase();
-    const filtered = categories.filter(cat => cat.name.toLowerCase().includes(searchTerm));
-    renderCategories(filtered);
-  }
-
-  // Form inline
   function showCategoryForm(categoryId = null) {
     const panelTitle = document.getElementById('panel-title');
     categoryForm.reset();
@@ -119,13 +104,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (saveBtn) saveBtn.style.display = 'inline-block';
       setFormDisabled(false);
     }
-  // mostrar o painel esquerdo quando o formulário é aberto
-  expandLeftPanel();
+    expandLeftPanel();
   }
 
   function hideForm() {
     const panelTitle = document.getElementById('panel-title');
-    // preserve search and id values
     const searchInput = document.getElementById('search-id');
     const searchVal = searchInput ? searchInput.value : '';
     const hiddenId = document.getElementById('category-id');
@@ -141,130 +124,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (saveBtn) saveBtn.style.display = 'none';
     if (panelTitle) panelTitle.textContent = 'Categoria';
     setFormDisabled(true);
-    // colapsar o painel esquerdo novamente (mantém o campo de busca visível)
     collapseLeftPanel();
-  }
-
-  // Formulário
-  async function handleFormSubmit(e) {
-    e.preventDefault();
-    const categoryId = document.getElementById('category-id').value;
-    const name = document.getElementById('category-name').value.trim();
-    if (!name) {
-      showMessage('O nome é obrigatório.', 'error');
-      return;
-    }
-    const catData = { name };
-    try {
-      if (categoryId) {
-        // Antes de tentar PUT, confirma que existe via GET
-        const check = await fetch(`${API_BASE_URL}/categories/${categoryId}`);
-        if (check.ok) {
-          const resp = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(catData)
-          });
-          if (resp.ok) showMessage('Categoria atualizada com sucesso!', 'success');
-          else throw new Error('Erro ao atualizar categoria');
-        } else if (check.status === 404) {
-          const create = confirm('Categoria não encontrada. Deseja criar com este ID?');
-          if (create) {
-            const payload = { id: parseInt(categoryId, 10), ...catData };
-            const r2 = await fetch(`${API_BASE_URL}/categories`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            if (r2.ok) showMessage('Categoria criada com sucesso!', 'success');
-            else showMessage('Falha ao criar categoria.', 'error');
-          } else {
-            showMessage('Operação cancelada. Categoria não existe.', 'warning');
-          }
-        } else {
-          throw new Error('Erro ao verificar categoria');
-        }
-      } else if (searchedId) {
-        // Se veio de uma busca por ID e não existe, criar com ID informado
-        const payload = { id: searchedId, ...catData };
-        const resp = await fetch(`${API_BASE_URL}/categories`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!resp.ok) throw new Error('Erro ao criar com ID');
-        showMessage('Categoria criada com sucesso!', 'success');
-      } else {
-        // Criar normalmente
-        await fetch(`${API_BASE_URL}/categories`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(catData)
-        });
-        showMessage('Categoria criada com sucesso!', 'success');
-      }
-  hideForm();
-      searchedId = null;
-      await loadCategories();
-    } catch (error) {
-      showMessage('Erro ao salvar categoria.', 'error');
-    }
-  }
-
-  // Editar e deletar
-  async function editCategory(id) {
-    showCategoryForm(id);
-  }
-
-  async function deleteCategory(id) {
-    if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
-    try {
-      // verifica existência antes
-      const check = await fetch(`${API_BASE_URL}/categories/${id}`);
-      if (!check.ok) {
-        if (check.status === 404) {
-          showMessage('Categoria não encontrada.', 'error');
-          return;
-        }
-        throw new Error('Erro ao verificar categoria');
-      }
-      const del = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
-      if (!del.ok) {
-        const txt = await del.text();
-        throw new Error(txt || 'Falha ao excluir');
-      }
-      showMessage('Categoria excluída!', 'success');
-      await loadCategories();
-    } catch (error) {
-      showMessage('Erro ao excluir categoria.', 'error');
-    }
-  }
-
-  // Buscar por ID: se existir carrega o modal em modo editar; se não existir abre modal para incluir com id preenchido
-  async function buscarPorId() {
-    const id = searchIdInput.value.trim();
-    if (!id) { showMessage('Digite um ID para buscar', 'warning'); return; }
-    try {
-      const r = await fetch(`${API_BASE_URL}/categories/${id}`);
-      if (r.ok) {
-            const cat = await r.json();
-            // abre modal de edição com o item encontrado
-            showCategoryForm(cat.id);
-            showMessage('Categoria encontrada! Clique em Alterar para editar ou Excluir para remover.', 'success');
-          } else if (r.status === 404) {
-          // abrir modal para criar com ID
-          categoriesContainer.innerHTML = '';
-          showCategoryForm();
-          document.getElementById('category-id').value = id;
-          searchedId = parseInt(id, 10);
-          showMessage('Categoria não encontrada. Preencha o formulário e clique em Salvar para criar.', 'info');
-      } else {
-        throw new Error('Erro na busca');
-      }
-    } catch (err) {
-      console.error(err);
-      showMessage('Erro ao buscar categoria', 'error');
-    }
+    if (searchIdInput) searchIdInput.disabled = false;
+    if (btnSearchId) btnSearchId.disabled = false;
   }
 
   function setFormDisabled(disabled) {
@@ -281,27 +143,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (editBtn) editBtn.style.display = 'none';
   }
 
-  function onCancel() {
-    hideForm();
+  function onCancel() { hideForm(); }
+  function onAfterDelete() { hideForm(); searchedId = null; }
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+    const categoryId = document.getElementById('category-id').value;
+    const name = document.getElementById('category-name').value.trim();
+    if (!name) return showMessage('O nome é obrigatório.', 'error');
+    const catData = { name };
+    try {
+      if (categoryId) {
+        const check = await fetch(`${API_BASE_URL}/categories/${categoryId}`);
+        if (check.ok) {
+          const resp = await fetch(`${API_BASE_URL}/categories/${categoryId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catData) });
+          if (resp.ok) showMessage('Categoria atualizada com sucesso!', 'success');
+          else throw new Error('Erro ao atualizar categoria');
+        } else if (check.status === 404) {
+          const create = confirm('Categoria não encontrada. Deseja criar com este ID?');
+          if (create) {
+            const payload = { id: parseInt(categoryId, 10), ...catData };
+            const r2 = await fetch(`${API_BASE_URL}/categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (r2.ok) showMessage('Categoria criada com sucesso!', 'success');
+            else showMessage('Falha ao criar categoria.', 'error');
+          } else {
+            showMessage('Operação cancelada. Categoria não existe.', 'warning');
+          }
+        } else {
+          throw new Error('Erro ao verificar categoria');
+        }
+      } else if (searchedId) {
+        const payload = { id: searchedId, ...catData };
+        const resp = await fetch(`${API_BASE_URL}/categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!resp.ok) throw new Error('Erro ao criar com ID');
+        showMessage('Categoria criada com sucesso!', 'success');
+      } else {
+        const r = await fetch(`${API_BASE_URL}/categories`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catData) });
+        if (!r.ok) throw new Error('Erro ao criar categoria');
+        showMessage('Categoria criada com sucesso!', 'success');
+      }
+      hideForm(); searchedId = null; await loadCategories();
+    } catch (error) { console.error(error); showMessage('Erro ao salvar categoria.', 'error'); }
   }
 
-  function onAfterDelete() {
-    hideForm();
-    searchedId = null;
+  // Buscar por ID
+  async function buscarPorId() {
+    const id = searchIdInput.value.trim();
+    if (!id) { showMessage('Digite um ID para buscar', 'warning'); return; }
+    try {
+      const r = await fetch(`${API_BASE_URL}/categories/${id}`);
+      if (r.ok) {
+        const cat = await r.json();
+        const sv = searchIdInput ? searchIdInput.value : '';
+        showCategoryForm(cat.id);
+        if (searchIdInput) searchIdInput.value = sv;
+        showMessage('Categoria encontrada! Clique em Alterar para editar ou Excluir para remover.', 'success');
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
+      } else if (r.status === 404) {
+        categoriesContainer.innerHTML = '';
+        const sv2 = searchIdInput ? searchIdInput.value : '';
+        showCategoryForm();
+        if (searchIdInput) searchIdInput.value = sv2;
+        document.getElementById('category-id').value = id;
+        searchedId = parseInt(id, 10);
+        showMessage('Categoria não encontrada. Preencha o formulário e clique em Salvar para criar.', 'info');
+        if (searchIdInput) searchIdInput.disabled = true;
+        if (btnSearchId) btnSearchId.disabled = true;
+      } else { throw new Error('Erro na busca'); }
+    } catch (err) { console.error(err); showMessage('Erro ao buscar categoria', 'error'); }
   }
 
-  // Mensagens
-  function showMessage(text, type) {
+  function showMessage(text, type = 'success') {
+    // dedupe: não mostrar mensagem idêntica já presente
+    const existing = Array.from(messageContainer.children).find(el => el.textContent === text && el.classList.contains(type === 'error' ? 'error' : 'success'));
+    if (existing) return;
     const message = document.createElement('div');
-    message.className = `message ${type}`;
+    message.className = `message ${type === 'error' ? 'error' : 'success'}`;
     message.textContent = text;
     messageContainer.appendChild(message);
-    setTimeout(() => {
-      message.remove();
-    }, 3000);
+    setTimeout(() => message.remove(), 3000);
   }
 
-  // enableActions removed: tabela não possui botões de ação
 });
-// CRUD de Categorias
-// Estrutura e funções serão implementadas após a criação do HTML
