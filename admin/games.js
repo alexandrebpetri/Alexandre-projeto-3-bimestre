@@ -57,18 +57,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const deleteGameBtn = document.getElementById('delete-game-btn');
   if (deleteGameBtn) {
     deleteGameBtn.addEventListener('click', async () => {
-      const id = document.getElementById('game-id').value;
-      if (!id) return showMessage('ID inválido para exclusão', 'error');
+      const idEl = document.getElementById('game-id');
+      const id = idEl ? idEl.value.trim() : '';
+      if (!id) {
+        showMessage('ID inválido para exclusão', 'error');
+        return;
+      }
       if (!confirm('Tem certeza que deseja excluir este jogo?')) return;
       try {
-        const res = await fetch(`${API_BASE_URL}/games/${id}`, { method: 'DELETE' });
-        if (!res.ok) { const txt = await res.text(); throw new Error(txt || 'Erro ao excluir'); }
+        const res = await fetch(`${API_BASE_URL}/games/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || 'Erro ao excluir');
+        }
         showMessage('Jogo excluído com sucesso!', 'success');
-        hideModal();
+        // usa a função existente para esconder o formulário/painel
+        hideForm();
         await loadGames();
       } catch (err) {
-        console.error(err);
-        showMessage('Erro ao excluir jogo.', 'error');
+        console.error('Erro ao excluir jogo:', err);
+        showMessage('Erro ao excluir jogo. ' + (err.message || ''), 'error');
       }
     });
   }
